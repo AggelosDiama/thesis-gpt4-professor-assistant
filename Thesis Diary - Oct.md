@@ -1,4 +1,4 @@
-###Thesis Diary - October
+### Thesis Diary - October
 
 #### Week 1 - 16-22/10
 - I prepared the github repository that I will use for my thesis as well as a github project connected with the repo. On the project table I added all the known tasks so far and even the "Thesis Defense" task to markdown the final week as a final milestone.
