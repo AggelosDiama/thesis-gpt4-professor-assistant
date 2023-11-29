@@ -1,0 +1,146 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+}
+
+.page-container {
+  display: flex;
+  height: 100vh; /* Set the height of the container to the full viewport height */
+}
+
+.main-btn {
+  background-color: #4aa747;
+  color: white;
+  padding: 15px;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.main-btn:hover {
+  opacity: 80%;
+}
+
+.filter-btn {
+  padding: 6px 15px;
+  margin-left: 5px;
+}
+
+.secondary-btn {
+  background-color: transparent;
+  color: #fff; /* Set to the main color or your preference */
+  border: 2px solid #fff; /* Set to the main color or your preference */
+  padding: 15px;
+  border-radius: 25px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 5px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.secondary-btn:hover {
+  background-color: #333336;
+}
+
+.sidebar {
+  width: 20%;
+  min-width: 200px;
+  max-width: 300px;
+  background-color: #5b5f69;
+  padding: 20px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-section {
+  margin-bottom: 10px;
+}
+
+.filter-section p {
+  margin: 0;
+  display: inline-block;
+}
+
+.divider {
+  height: 1px;
+  background-color: white;
+  margin: 10px 0;
+}
+
+.chat-history ul {
+  list-style: none;
+  padding: 0;
+}
+
+.chat-history li {
+  margin-bottom: 5px;
+  padding: 20px;
+  cursor: pointer;
+}
+
+.chat-history li:hover {
+  background-color: #873236;
+}
+
+.btm-sidebar-container {
+  margin-top: auto; /* Push to the bottom */
+  padding-bottom: 10px;
+}
+
+.new-exr-btn i {
+  color: white;
+}
+
+.user-settings {
+  align-items: left;
+}
+
+.user-settings a {
+  color: white;
+  padding: 15px;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+  margin-top: 15px;
+}
+
+.user-settings a:hover {
+  background-color: #333336;
+}
+
+.chat-container {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.input-section {
+  margin-top: auto; /* Push to the bottom */
+}
+
+.input-section input {
+  padding: 10px;
+  width: 683px;
+  height: 30px;
+  margin-left: 10px;
+  background-color: #dddde1;
+  color: #9c9ea2;
+  font-size: 16px;
+  border-radius: 15px;
+  border: none;
+}
+
+.input-section p {
+  margin-top: 10px;
+  margin-left: 80px;
+  color: gray;
+  text-align: center;
+  font-size: 12px;
+}
