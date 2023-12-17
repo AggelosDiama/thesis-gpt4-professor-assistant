@@ -1,5 +1,25 @@
 {
-  "dependencies": {
-    "firebase": "^10.6.0"
+  "name": "thesis-gpt4-professor-assistant",
+  "version": "1.0.0",
+  "description": "This is the repository of my thesis about designing and creating a web app that will use the GPT-4 as part of a professor assistant in a coding laboratory.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AggelosDiama/thesis-gpt4-professor-assistant.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AggelosDiama/thesis-gpt4-professor-assistant/issues"
+  },
+  "homepage": "https://github.com/AggelosDiama/thesis-gpt4-professor-assistant#readme",
+  "devDependencies": {
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
   }
 }

@@ -1,19 +1,18 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
 
-const {onRequest} = require("firebase-functions/v2/https");
-const logger = require("firebase-functions/logger");
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+const firebaseConfig = {
+  apiKey: "AIzaSyAdrmtigXisK1_l5x6YQ5s2Fg3QARctuQo",
+  authDomain: "thesis-77e2b.firebaseapp.com",
+  databaseURL: "https://thesis-77e2b-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "thesis-77e2b",
+  storageBucket: "thesis-77e2b.appspot.com",
+  messagingSenderId: "229809480316",
+  appId: "1:229809480316:web:960c1d9639f9d2722e9ff9",
+  measurementId: "G-WBKP5MW0W7"
+};
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
