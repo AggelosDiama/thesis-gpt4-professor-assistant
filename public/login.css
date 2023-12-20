@@ -13,6 +13,7 @@ body {
   background: #fff;
   box-shadow: 0px 4px 12px 0px rgba(0, 0, 0, 0.15);
   padding: 60px;
+  margin-bottom: 80px
 }
 
 .login-container {
@@ -40,6 +41,8 @@ h1 {
   font-size: 16px;
   padding: 10px;
   margin-bottom: 15px;
+  border-radius: 10px;
+  border: 0.5px solid #333;
 }
 
 .main-btn {
@@ -52,4 +55,8 @@ h1 {
   cursor: pointer;
   width: 107%;
   margin-top: 30px;
+}
+
+.form_redirect {
+  text-align: center;
 }
