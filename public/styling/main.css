@@ -1,0 +1,196 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+}
+
+.page-container {
+  display: flex;
+  height: 100vh; /* Set the height of the container to the full viewport height */
+}
+
+.main-btn {
+  background-color: #4aa747;
+  color: white;
+  padding: 15px;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.main-btn:hover {
+  opacity: 80%;
+}
+
+.filter-btn {
+  padding: 6px 15px;
+  margin-left: 5px;
+}
+
+.secondary-btn {
+  background-color: transparent;
+  color: #fff; /* Set to the main color or your preference */
+  border: 2px solid #fff; /* Set to the main color or your preference */
+  padding: 15px;
+  border-radius: 25px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  min-width: 170px;
+}
+
+.secondary-btn:hover {
+  background-color: #333336;
+}
+
+.sidebar {
+  width: 20%;
+  min-width: 200px;
+  max-width: 300px;
+  background-color: #5b5f69;
+  padding: 20px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-section {
+  margin-bottom: 10px;
+}
+
+.filter-section p {
+  margin: 0;
+  display: inline-block;
+}
+
+.divider {
+  height: 1px;
+  background-color: white;
+  margin: 10px 0;
+}
+
+.chat-history ul {
+  list-style: none;
+  padding: 0;
+}
+
+.chat-history li {
+  margin-bottom: 5px;
+  padding: 20px;
+  cursor: pointer;
+}
+
+.chat-history li:hover {
+  background-color: #873236;
+}
+
+.btm-sidebar-container {
+  margin-top: auto; /* Push to the bottom */
+  padding-bottom: 10px;
+}
+
+.new-exr-btn i {
+  color: white;
+}
+
+.user-settings {
+  align-items: left;
+}
+
+.user-settings a {
+  color: white;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+    
+}
+
+.user-settings a:hover {
+  background-color: #333336;
+}
+
+.secondary-btn.dropdown {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+
+.username {
+  margin-right: auto; /* Push the username to the far left */
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  top: -50px; /* Adjust the top value to move the dropdown content above the username */
+  right: 0; /* Align the right side of the dropdown content with the right side of the container */
+  padding: 7px;
+  border-radius: 7px;
+  flex-direction: column;
+  align-items: center;
+  background-color: #333;
+  min-width: 120px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+
+  /* Add transition for smooth ease-in-ease-out animation */
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* Show the dropdown menu on hover */
+.show {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.secondary-btn.logout {
+  width: 80px;
+  font-size: 13px;
+  padding: 6px;
+  margin-bottom: 0px;
+  margin-top: 0px;
+}
+
+.secondary-btn.logout:hover {
+  background-color: rgba(255, 255, 255, 0.2)
+  
+}
+
+.chat-container {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.input-section {
+  margin-top: auto; /* Push to the bottom */
+}
+
+.input-section input {
+  padding: 10px;
+  width: 683px;
+  height: 30px;
+  margin-left: 10px;
+  background-color: #dddde1;
+  color: #9c9ea2;
+  font-size: 16px;
+  border-radius: 15px;
+  border: none;
+}
+
+.input-section p {
+  margin-top: 10px;
+  margin-left: 80px;
+  color: gray;
+  text-align: center;
+  font-size: 12px;
+}

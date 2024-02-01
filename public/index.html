@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-    <link rel="stylesheet" href="login.css" />
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+    <link rel="stylesheet" href="/styling/login.css" />
     <title>Login Page</title>
   </head>
   <body>
@@ -13,8 +13,18 @@
         <img src="./images/login-icon.svg" alt="Login Image" />
         <h1>Sign in</h1>
         <form class="login" action="main.html">
-          <input type="email" name="email" placeholder="Email" class="login-input" />
-          <input type="password" name="password" placeholder="Password" class="login-input" />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            class="login-input"
+          />
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            class="login-input"
+          />
           <button type="submit" class="main-btn">Sign In</button>
         </form>
         <div class="form_redirect">
@@ -25,6 +35,6 @@
         </div>
       </div>
     </div>
-    <script src="login.bundle.js" defer></script>
+    <script type="module" src="./login.bundle.js" defer></script>
   </body>
 </html>

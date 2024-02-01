@@ -1,43 +1,43 @@
+import express from "express";
+import { onRequest } from "firebase-functions/v1/https";
+import openai from "../src/config/openaiConfig.js";
+import cors from "cors";
 
-import { initializeApp } from 'firebase/app';
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  onAuthStateChanged
-} from 'firebase/auth'
+const app = express();
 
+// Middleware to enable CORS
+// app.use(
+//   cors({
+//     origin: true,
+//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//   })
+// );
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAdrmtigXisK1_l5x6YQ5s2Fg3QARctuQo",
-  authDomain: "thesis-77e2b.firebaseapp.com",
-  databaseURL: "https://thesis-77e2b-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "thesis-77e2b",
-  storageBucket: "thesis-77e2b.appspot.com",
-  messagingSenderId: "229809480316",
-  appId: "1:229809480316:web:960c1d9639f9d2722e9ff9",
-  measurementId: "G-WBKP5MW0W7"
-};
+// Middleware to parse JSON data and populate req.body
+app.use(express.json());
+app.use(express.static("public"));
 
-// Initialize Firebase
-initializeApp(firebaseConfig);
-const auth = getAuth();
+export const generateMeta = onRequest(
+  { cors: [/firebase\.com$/, "flutter.com"] },
+  async (req, res) => {
+    const { title } = req.body;
 
-const loginForm = document.querySelector('.login')
-loginForm.addEventListener('submit', (e) => {
-  e.preventDefault();
+    const description = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "user",
+          content: `Come up with a description for a YouTube video called ${title}`,
+        },
+      ],
+      max_tokens: 100,
+    });
 
-  const email = loginForm.email.value
-  const password = loginForm.password.value
+    console.log(description.choices[0].message);
 
-  signInWithEmailAndPassword(auth, email, password)
-    .then(cred => {
-      console.log('user logged in:', cred.user)
-
-      // Redirect to main.html upon successful login
-      window.location.href = './main.html';
-    })
-    .catch(err => {
-      console.log(err.message)
-    })
-
-})
+    res.status(200).json({
+      description: description.choices[0].message,
+    });
+  }
+);
