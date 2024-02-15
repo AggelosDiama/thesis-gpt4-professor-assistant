@@ -1,5 +1,4 @@
 import path from "path";
-import MiniCssExtractPlugin from "mini-css-extract-plugin";
 
 const __filename = new URL(import.meta.url).pathname;
 const __dirname = path.dirname(__filename);
@@ -18,17 +17,4 @@ export default {
     filename: "[name].bundle.js",
   },
   watch: true,
-  module: {
-    rules: [
-      {
-        test: /\.css$/,
-        use: [MiniCssExtractPlugin.loader, "css-loader"],
-      },
-    ],
-  },
-  plugins: [
-    new MiniCssExtractPlugin({
-      filename: "[name].bundle.css",
-    }),
-  ],
 };
