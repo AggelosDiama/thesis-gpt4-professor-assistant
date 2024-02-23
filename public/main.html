@@ -36,9 +36,9 @@
 
         <div class="btm-sidebar-container">
           <div class="divider"></div>
-          <button class="new-exr-btn secondary-btn">
+          <!-- <button class="new-exr-btn secondary-btn">
             <img src="./images/plus-solid (1).svg" /> New Exercise
-          </button>
+          </button> -->
           <div class="user-settings">
             <div class="secondary-btn dropdown" onclick="toggleDropdown()">
               <a href="index.html" class="username" id="usernameLink">...</a>
@@ -73,6 +73,28 @@
             possible questions on your code
           </p>
         </div>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="myModal" class="modal">
+      <!-- Modal content -->
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>New Exercise</h2>
+        <form id="exercise-form">
+          <label for="exercise-title">Title:</label>
+          <input type="text" id="exercise-title" required />
+          <br />
+          <label for="exercise-date">Date:</label>
+          <input type="date" id="exercise-date" required />
+          <br />
+          <label for="visibility">Visibility:</label>
+          <input type="checkbox" id="visibility" checked />
+          <br />
+          <button type="submit" class="done-btn">Done</button>
+          <button type="button" class="cancel-btn">Cancel</button>
+        </form>
       </div>
     </div>
 
