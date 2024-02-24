@@ -50,6 +50,16 @@ chatForm.addEventListener("submit", async (e) => {
     // Append the new message to the messages container
     messagesContainer.appendChild(newMessage);
 
+    // Store the message in Firestore
+    const exerciseId = document.getElementById("exercise-id").textContent; // Get the exercise ID from the DOM
+    const exerciseDocRef = doc(getFirestore(), "exercises", exerciseId); // Get the exercise document reference
+    const messagesRef = collection(exerciseDocRef, "messages"); // Get the messages subcollection reference
+
+    await addDoc(messagesRef, {
+      text: userMessage,
+      timestamp: serverTimestamp(),
+    }); // Add the user message to the messages subcollection
+
     // Scroll to the bottom of the messages container
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
