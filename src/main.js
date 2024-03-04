@@ -1,6 +1,16 @@
 import { auth } from "./config/firebaseConfig.js";
 import { signOut, onAuthStateChanged } from "@firebase/auth";
-import { getFirestore, doc, getDoc } from "firebase/firestore"; // Import Firestore functions
+import {
+  collection,
+  getFirestore,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  serverTimestamp,
+  addDoc,
+  Timestamp,
+} from "firebase/firestore";
 
 // Function to toggle the dropdown menu
 window.toggleDropdown = function () {
@@ -8,14 +18,66 @@ window.toggleDropdown = function () {
   dropdown.classList.toggle("show");
 };
 
-// Function to toggle visibility of the new exercise button based on user role
-function toggleNewExerciseButtonVisibility(user) {
-  const newExerciseButton = document.querySelector(".new-exr-btn");
-  if (user && user.isProfessor === true) {
-    newExerciseButton.style.display = "block";
-  } else {
-    newExerciseButton.style.display = "none";
-  }
+// Global variable to store the ID of the active exercise document
+let ActiveExerciseDocId;
+
+// Function to create a new exercise document in Firestore
+async function createNewExercise(title, date, visibility) {
+  const docRef = collection(getFirestore(), "exercises"); // Get a reference to the collection
+  const newExerciseDoc = await addDoc(docRef, { title, date, visibility }); // Add document and get the reference
+
+  // Store the ID of the active exercise document
+  ActiveExerciseDocId = newExerciseDoc.id;
+  // Store the ID of the active exercise document in localStorage
+  localStorage.setItem("ActiveExerciseDocId", ActiveExerciseDocId);
+
+  // Initialize the messages subcollection for this exercise
+  const messagesRef = collection(newExerciseDoc, "messages");
+  await addDoc(messagesRef, {
+    text: "Exercise created",
+    timestamp: serverTimestamp(),
+  });
+
+  // Update the UI with the new exercise
+  const chatHistory = document.querySelector(".chat-history ul");
+  const ExerciseItem = document.createElement("li");
+  ExerciseItem.textContent = `${title} - ${date}`;
+  ExerciseItem.setAttribute("doc-id", ActiveExerciseDocId); // Add the ID attribute
+  ExerciseItem.addEventListener("click", selectExercise); // Add event listener
+  chatHistory.appendChild(ExerciseItem);
+}
+
+// Event listener function to select an exercise
+function selectExercise(event) {
+  // Get the ID of the selected exercise
+  const exerciseId = event.currentTarget.getAttribute("doc-id");
+
+  // Update the ActiveExerciseDocId
+  ActiveExerciseDocId = exerciseId;
+
+  // Update the localStorage
+  localStorage.setItem("ActiveExerciseDocId", ActiveExerciseDocId);
+  console.log(localStorage.getItem("ActiveExerciseDocId"));
+}
+
+// Function to create the new exercise button based on user role
+function createNewExerciseButton(user) {
+  const newExerciseButton = document.createElement("button");
+  newExerciseButton.className = "new-exr-btn secondary-btn";
+  newExerciseButton.addEventListener("click", () => {
+    // Open the modal when the button is clicked
+    const modal = document.getElementById("myModal");
+    modal.style.display = "block";
+  });
+
+  const newExerciseIcon = document.createElement("img");
+  newExerciseIcon.src = "./images/plus-solid (1).svg";
+  newExerciseButton.appendChild(newExerciseIcon);
+
+  const newExerciseText = document.createTextNode("New Exercise");
+  newExerciseButton.appendChild(newExerciseText);
+
+  return newExerciseButton;
 }
 
 //logging out
@@ -40,8 +102,29 @@ onAuthStateChanged(auth, async (user) => {
       const userDocSnapshot = await getDoc(userDocRef);
       const userData = userDocSnapshot.data();
 
-      // Toggle visibility of new exercise button based on user role
-      toggleNewExerciseButtonVisibility(userData);
+      // Check if the user is a professor
+      if (userData.isProfessor) {
+        // Create the new exercise button based on user role
+        const newExerciseButton = createNewExerciseButton(userData);
+        const userSettings = document.querySelector(".user-settings");
+        userSettings.parentNode.insertBefore(newExerciseButton, userSettings);
+      }
+
+      // Update the chat history with exercises from Firestore
+      const exercisesRef = collection(getFirestore(), "exercises");
+      const querySnapshot = await getDocs(exercisesRef);
+      querySnapshot.forEach((doc) => {
+        const exercise = doc.data();
+        //console.log(exercise);
+        const chatHistory = document.querySelector(".chat-history ul");
+        const ExerciseItem = document.createElement("li");
+        ExerciseItem.textContent = `${exercise.title} - ${exercise.date}`;
+
+        ExerciseItem.setAttribute("doc-id", doc.id);
+        ExerciseItem.addEventListener("click", selectExercise); // Add event listener
+
+        chatHistory.appendChild(ExerciseItem);
+      });
     } catch (error) {
       console.error("Error:", error);
     }
@@ -54,3 +137,51 @@ onAuthStateChanged(auth, async (user) => {
     console.log("User is signed out");
   }
 });
+
+var modal = document.getElementById("myModal"); // Get the modal
+var newExerciseButton = document.querySelector(".new-exr-btn"); // Get the button that opens the modal
+// var span = document.getElementsByClassName("close")[0]; // Get the <span> element that closes the modal
+
+// When the user clicks the button, open the modal
+// newExerciseButton.onclick = function () {
+//   modal.style.display = "block";
+// };
+
+// When the user clicks on <span> (x), close the modal
+// span.onclick = function () {
+//   modal.style.display = "none";
+// };
+
+// When the user clicks anywhere outside of the modal, close it
+// window.onclick = function (event) {
+//   if (event.target == modal) {
+//     modal.style.display = "none";
+//   }
+// };
+
+// When the user clicks on the "Cancel" button, close the modal
+var cancelButton = document.querySelector(".cancel-btn");
+cancelButton.onclick = function () {
+  modal.style.display = "none";
+};
+
+// When the user submits the form, save the data to Firestore
+document
+  .getElementById("exercise-form")
+  .addEventListener("submit", function (event) {
+    event.preventDefault(); // Prevent the form from submitting
+
+    // Get the form data
+    var title = document.getElementById("exercise-title").value;
+    var date = document.getElementById("exercise-date").value;
+    var visibility = document.getElementById("visibility").checked;
+
+    // Save the data to Firestore
+    createNewExercise(title, date, visibility);
+
+    // Close the modal
+    modal.style.display = "none";
+
+    // Reset the form
+    event.target.reset();
+  });

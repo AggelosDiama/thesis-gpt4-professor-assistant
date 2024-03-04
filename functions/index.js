@@ -5,15 +5,6 @@ import cors from "cors";
 
 const app = express();
 
-// Middleware to enable CORS
-// app.use(
-//   cors({
-//     origin: true,
-//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-//     allowedHeaders: ["Content-Type", "Authorization"],
-//   })
-// );
-
 // Middleware to parse JSON data and populate req.body
 app.use(express.json());
 app.use(express.static("public"));
