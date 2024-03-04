@@ -8,15 +8,17 @@ body {
   background-color: #f0f0f0;
 }
 
-.login-box {
+.login-box,
+.exercise-box {
   border-radius: 8px;
   background: #fff;
   box-shadow: 0px 4px 12px 0px rgba(0, 0, 0, 0.15);
   padding: 60px;
-  margin-bottom: 80px
+  margin-bottom: 80px;
 }
 
-.login-container {
+.login-container,
+.exercise-list {
   width: 300px;
   display: flex;
   flex-direction: column;
@@ -53,10 +55,35 @@ h1 {
   border-radius: 25px;
   font-size: 16px;
   cursor: pointer;
-  width: 107%;
-  margin-top: 30px;
+  width: 100%;
 }
 
 .form_redirect {
   text-align: center;
+}
+
+/* ---------------- Join page css ---------------- */
+
+.exercise-list {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.exercise-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 30px;
+}
+
+.exercise-item li {
+  margin-right: 10px; /* Add spacing between the li element and the button */
+}
+
+.join-btn {
+  margin-left: auto; /* Push the button to the right */
+  max-width: 120px;
+  height: 35px;
+  padding: 0px;
 }

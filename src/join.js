@@ -1,0 +1,66 @@
+import { auth } from "./config/firebaseConfig.js";
+import { onAuthStateChanged } from "@firebase/auth";
+import { collection, getFirestore, getDocs } from "firebase/firestore";
+
+// Global variable to store the ID of the active exercise document
+let ActiveExerciseDocId;
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    try {
+      // Update the chat history with exercises from Firestore
+      const exercisesRef = collection(getFirestore(), "exercises");
+      const querySnapshot = await getDocs(exercisesRef);
+      querySnapshot.forEach((doc) => {
+        const exercise = doc.data();
+        //console.log(doc.id);
+        const chatHistory = document.querySelector(".exercise-list");
+
+        // Create a div element to wrap the li and button
+        const exerciseElement = document.createElement("div");
+        exerciseElement.className = "exercise-item";
+
+        // Store the ID of the active exercise document
+        ActiveExerciseDocId = doc.id;
+
+        // Create the li element with the exercise title and date
+        const ExerciseItem = document.createElement("li");
+        ExerciseItem.textContent = `${exercise.title}`;
+
+        // Create the button element
+        const joinButton = document.createElement("button");
+        joinButton.textContent = "Join";
+        joinButton.className = "main-btn join-btn";
+        joinButton.setAttribute("doc-id", ActiveExerciseDocId); // Add the ID attribute
+        joinButton.addEventListener("click", selectExercise);
+
+        // Append the li and button to the div element
+        exerciseElement.appendChild(ExerciseItem);
+        exerciseElement.appendChild(joinButton);
+
+        // Append the div element to the chat history
+        chatHistory.appendChild(exerciseElement);
+      });
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  } else {
+    console.log("User is signed out");
+  }
+});
+
+// Event listener function to select an exercise
+function selectExercise(event) {
+  // Get the ID of the selected exercise
+  const exerciseId = event.currentTarget.getAttribute("doc-id");
+
+  // Update the ActiveExerciseDocId
+  ActiveExerciseDocId = exerciseId;
+
+  // Update the localStorage
+  localStorage.setItem("ActiveExerciseDocId", ActiveExerciseDocId);
+  //console.log(localStorage.getItem("ActiveExerciseDocId"));
+
+  // Redirect to the main.html page
+  window.location.href = "main.html";
+}

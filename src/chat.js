@@ -1,3 +1,12 @@
+import { app, db, auth } from "./config/firebaseConfig.js";
+import {
+  collection,
+  getFirestore,
+  doc,
+  serverTimestamp,
+  addDoc,
+} from "firebase/firestore"; // Import Firestore functions
+
 // Forms
 const chatForm = document.getElementById("chat-form");
 const formInput = document.getElementById("chat-input");
@@ -50,18 +59,33 @@ chatForm.addEventListener("submit", async (e) => {
     // Append the new message to the messages container
     messagesContainer.appendChild(newMessage);
 
-    // Store the message in Firestore
-    const exerciseId = document.getElementById("exercise-id").textContent; // Get the exercise ID from the DOM
-    const exerciseDocRef = doc(getFirestore(), "exercises", exerciseId); // Get the exercise document reference
-    const messagesRef = collection(exerciseDocRef, "messages"); // Get the messages subcollection reference
-
-    await addDoc(messagesRef, {
-      text: userMessage,
-      timestamp: serverTimestamp(),
-    }); // Add the user message to the messages subcollection
-
     // Scroll to the bottom of the messages container
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    // Retrieve the ID of the active exercise document from localStorage
+    const ActiveExerciseDocId = localStorage.getItem("ActiveExerciseDocId");
+
+    // Retrieve the user ID from Firebase Authentication
+    const user = auth.currentUser;
+    const userId = user ? user.uid : null;
+
+    // Store the message in Firestore
+    if (ActiveExerciseDocId) {
+      const exerciseDocRef = doc(
+        getFirestore(),
+        "exercises",
+        ActiveExerciseDocId
+      ); // Get the exercise document reference
+      const messagesRef = collection(exerciseDocRef, "messages"); // Get the messages subcollection reference
+
+      await addDoc(messagesRef, {
+        text: data.description.content,
+        timestamp: serverTimestamp(),
+        userId: userId, // Include th
+      }); // Add the user message to the messages subcollection
+    } else {
+      console.error("Active exercise document ID not found");
+    }
 
     chatForm.reset();
   } catch (error) {

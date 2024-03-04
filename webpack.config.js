@@ -11,6 +11,7 @@ export default {
     register: path.resolve(__dirname, "src/register.js"),
     main: path.resolve(__dirname, "src/main.js"),
     chat: path.resolve(__dirname, "src/chat.js"),
+    join: path.resolve(__dirname, "src/join.js"),
   },
   output: {
     path: path.resolve(__dirname, "public"),

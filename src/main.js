@@ -10,7 +10,7 @@ import {
   serverTimestamp,
   addDoc,
   Timestamp,
-} from "firebase/firestore"; // Import Firestore functions
+} from "firebase/firestore";
 
 // Function to toggle the dropdown menu
 window.toggleDropdown = function () {
@@ -18,23 +18,46 @@ window.toggleDropdown = function () {
   dropdown.classList.toggle("show");
 };
 
+// Global variable to store the ID of the active exercise document
+let ActiveExerciseDocId;
+
 // Function to create a new exercise document in Firestore
 async function createNewExercise(title, date, visibility) {
-  const docRef = doc(getFirestore(), "exercises", title); // Get a reference to the document
-  await setDoc(docRef, { title: title, date: date, visibility: visibility }); // Set the data
+  const docRef = collection(getFirestore(), "exercises"); // Get a reference to the collection
+  const newExerciseDoc = await addDoc(docRef, { title, date, visibility }); // Add document and get the reference
 
-  // Update the UI with the new exercise
-  const chatHistory = document.querySelector(".chat-history ul");
-  const newExerciseItem = document.createElement("li");
-  newExerciseItem.textContent = `${title} - ${date}`;
-  chatHistory.appendChild(newExerciseItem);
+  // Store the ID of the active exercise document
+  ActiveExerciseDocId = newExerciseDoc.id;
+  // Store the ID of the active exercise document in localStorage
+  localStorage.setItem("ActiveExerciseDocId", ActiveExerciseDocId);
 
   // Initialize the messages subcollection for this exercise
-  const messagesRef = collection(docRef, "messages");
+  const messagesRef = collection(newExerciseDoc, "messages");
   await addDoc(messagesRef, {
     text: "Exercise created",
     timestamp: serverTimestamp(),
   });
+
+  // Update the UI with the new exercise
+  const chatHistory = document.querySelector(".chat-history ul");
+  const ExerciseItem = document.createElement("li");
+  ExerciseItem.textContent = `${title} - ${date}`;
+  ExerciseItem.setAttribute("doc-id", ActiveExerciseDocId); // Add the ID attribute
+  ExerciseItem.addEventListener("click", selectExercise); // Add event listener
+  chatHistory.appendChild(ExerciseItem);
+}
+
+// Event listener function to select an exercise
+function selectExercise(event) {
+  // Get the ID of the selected exercise
+  const exerciseId = event.currentTarget.getAttribute("doc-id");
+
+  // Update the ActiveExerciseDocId
+  ActiveExerciseDocId = exerciseId;
+
+  // Update the localStorage
+  localStorage.setItem("ActiveExerciseDocId", ActiveExerciseDocId);
+  console.log(localStorage.getItem("ActiveExerciseDocId"));
 }
 
 // Function to create the new exercise button based on user role
@@ -79,20 +102,28 @@ onAuthStateChanged(auth, async (user) => {
       const userDocSnapshot = await getDoc(userDocRef);
       const userData = userDocSnapshot.data();
 
-      // Create the new exercise button based on user role
-      const newExerciseButton = createNewExerciseButton(userData);
-      const userSettings = document.querySelector(".user-settings");
-      userSettings.parentNode.insertBefore(newExerciseButton, userSettings);
+      // Check if the user is a professor
+      if (userData.isProfessor) {
+        // Create the new exercise button based on user role
+        const newExerciseButton = createNewExerciseButton(userData);
+        const userSettings = document.querySelector(".user-settings");
+        userSettings.parentNode.insertBefore(newExerciseButton, userSettings);
+      }
 
       // Update the chat history with exercises from Firestore
       const exercisesRef = collection(getFirestore(), "exercises");
       const querySnapshot = await getDocs(exercisesRef);
       querySnapshot.forEach((doc) => {
         const exercise = doc.data();
+        //console.log(exercise);
         const chatHistory = document.querySelector(".chat-history ul");
-        const newExerciseItem = document.createElement("li");
-        newExerciseItem.textContent = `${exercise.title} - ${exercise.date}`;
-        chatHistory.appendChild(newExerciseItem);
+        const ExerciseItem = document.createElement("li");
+        ExerciseItem.textContent = `${exercise.title} - ${exercise.date}`;
+
+        ExerciseItem.setAttribute("doc-id", doc.id);
+        ExerciseItem.addEventListener("click", selectExercise); // Add event listener
+
+        chatHistory.appendChild(ExerciseItem);
       });
     } catch (error) {
       console.error("Error:", error);
@@ -150,4 +181,7 @@ document
 
     // Close the modal
     modal.style.display = "none";
+
+    // Reset the form
+    event.target.reset();
   });
