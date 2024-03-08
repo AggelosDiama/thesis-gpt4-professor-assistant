@@ -23,11 +23,6 @@ body {
   opacity: 80%;
 }
 
-.filter-btn {
-  padding: 6px 15px;
-  margin-left: 5px;
-}
-
 .secondary-btn {
   background-color: transparent;
   color: #fff; /* Set to the main color or your preference */
@@ -56,34 +51,34 @@ body {
   flex-direction: column;
 }
 
-.filter-section {
-  margin-bottom: 10px;
-}
-
-.filter-section p {
-  margin: 0;
-  display: inline-block;
-}
-
 .divider {
   height: 1px;
   background-color: white;
   margin: 10px 0;
 }
 
-.chat-history ul {
+.exercise-list ul {
   list-style: none;
   padding: 0;
 }
 
-.chat-history li {
+.exercise-list li {
   margin-bottom: 5px;
   padding: 20px;
   cursor: pointer;
 }
 
-.chat-history li:hover {
+.exercise-list li:hover {
   background-color: #873236;
+}
+
+.instruction-paragraph {
+  font-size: 16px;
+  text-align: justify;
+  line-height: 30px;
+  background-color: slategrey;
+  border-radius: 10px;
+  padding: 25px;
 }
 
 .btm-sidebar-container {
@@ -125,8 +120,9 @@ body {
 .dropdown-content {
   display: none;
   position: absolute;
-  top: -50px; /* Adjust the top value to move the dropdown content above the username */
-  right: 0; /* Align the right side of the dropdown content with the right side of the container */
+  width: 100%;
+  top: -100px;
+  right: -5px;
   padding: 7px;
   border-radius: 7px;
   flex-direction: column;
@@ -154,7 +150,7 @@ body {
   font-size: 13px;
   padding: 6px;
   margin-bottom: 0px;
-  margin-top: 0px;
+  margin-top: 5px;
 }
 
 .secondary-btn.logout:hover {
@@ -194,7 +190,7 @@ body {
   margin-top: auto; /* Push to the bottom */
 }
 
-.input-section input {
+.input-section textarea {
   padding: 10px;
   width: 683px;
   height: 30px;

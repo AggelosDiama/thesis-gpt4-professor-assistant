@@ -39,12 +39,12 @@ async function createNewExercise(title, date, visibility) {
   });
 
   // Update the UI with the new exercise
-  const chatHistory = document.querySelector(".chat-history ul");
+  const exerciseList = document.querySelector(".exercise-list ul");
   const ExerciseItem = document.createElement("li");
   ExerciseItem.textContent = `${title} - ${date}`;
   ExerciseItem.setAttribute("doc-id", ActiveExerciseDocId); // Add the ID attribute
   ExerciseItem.addEventListener("click", selectExercise); // Add event listener
-  chatHistory.appendChild(ExerciseItem);
+  exerciseList.appendChild(ExerciseItem);
 }
 
 // Event listener function to select an exercise
@@ -108,23 +108,44 @@ onAuthStateChanged(auth, async (user) => {
         const newExerciseButton = createNewExerciseButton(userData);
         const userSettings = document.querySelector(".user-settings");
         userSettings.parentNode.insertBefore(newExerciseButton, userSettings);
+
+        // Update the chat history with exercises from Firestore
+        const exerciseList = document.querySelector(".exercise-list ul");
+        exerciseList.textContent = " ";
+        const exercisesRef = collection(getFirestore(), "exercises");
+        const querySnapshot = await getDocs(exercisesRef);
+        querySnapshot.forEach((doc) => {
+          const exercise = doc.data();
+          //console.log(exercise);
+
+          const ExerciseItem = document.createElement("li");
+          ExerciseItem.textContent = `${exercise.title} - ${exercise.date}`;
+
+          ExerciseItem.setAttribute("doc-id", doc.id);
+          ExerciseItem.addEventListener("click", selectExercise); // Add event listener
+
+          exerciseList.appendChild(ExerciseItem);
+        });
+
+        // Set the title for the chat history
+        document.querySelector(".exercise-list p b").textContent =
+          "Exercises History";
+      } else {
+        // Set the title for the exercise instructions
+        document.querySelector(".exercise-list p b").textContent =
+          "Exercise Instructions";
+
+        // Create a paragraph with instructions
+        const instructionsParagraph = document.createElement("p");
+        instructionsParagraph.innerHTML =
+          "<b> --- READ HERE FIRST --- </b>These are the instructions for the lab exercise. Please copy paste in the chat prompt your code solution and press send. You will recieve a response with detailed feedback for your solution and with a respective grade (out of 10) which is not final.    <b>DISCLAIMER</b>: At this version the file upload feature is not available!";
+        instructionsParagraph.classList.add("instruction-paragraph"); // Add class to the paragraph
+
+        // Append the paragraph to the exercise list
+        const exerciseList = document.querySelector(".exercise-list ul");
+        exerciseList.textContent = " ";
+        exerciseList.appendChild(instructionsParagraph);
       }
-
-      // Update the chat history with exercises from Firestore
-      const exercisesRef = collection(getFirestore(), "exercises");
-      const querySnapshot = await getDocs(exercisesRef);
-      querySnapshot.forEach((doc) => {
-        const exercise = doc.data();
-        //console.log(exercise);
-        const chatHistory = document.querySelector(".chat-history ul");
-        const ExerciseItem = document.createElement("li");
-        ExerciseItem.textContent = `${exercise.title} - ${exercise.date}`;
-
-        ExerciseItem.setAttribute("doc-id", doc.id);
-        ExerciseItem.addEventListener("click", selectExercise); // Add event listener
-
-        chatHistory.appendChild(ExerciseItem);
-      });
     } catch (error) {
       console.error("Error:", error);
     }

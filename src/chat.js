@@ -13,7 +13,6 @@ const formInput = document.getElementById("chat-input");
 
 // Output elements
 const messagesContainer = document.querySelector(".messages");
-const messages = messagesContainer.querySelector("p");
 
 chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -29,17 +28,13 @@ chatForm.addEventListener("submit", async (e) => {
     // Append the user's message to the messages container
     messagesContainer.appendChild(userMessageElement);
 
-    // Create a new paragraph element for the response message
-    const responseMessageElement = document.createElement("p");
-
     // Fetch response message from server...
     const res = await fetch(
-      "http://127.0.0.1:5001/thesis-77e2b/us-central1/generateMeta",
+      "http://127.0.0.1:5001/thesis-77e2b/us-central1/studentChatRule",
       {
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: formInput.value }),
+        body: JSON.stringify({ code: formInput.value }),
         method: "POST",
-        mode: "cors",
       }
     );
 
@@ -47,14 +42,11 @@ chatForm.addEventListener("submit", async (e) => {
       throw new Error(`HTTP error! Status: ${res.status}`);
     }
 
-    const data = await res.json();
-
-    console.log(data.description);
-
-    // Create a new paragraph element for the message
-    const newMessage = document.createElement("p");
-    newMessage.textContent =
-      data.description.content || "No description available";
+    const feedbackHtml = await res.text(); // Get the HTML-formatted feedback formatFeedback
+    console.log(feedbackHtml);
+    // Create a new div element for the message
+    const newMessage = document.createElement("div");
+    newMessage.innerHTML = feedbackHtml; // Set inner HTML with the formatted feedback
 
     // Append the new message to the messages container
     messagesContainer.appendChild(newMessage);
@@ -79,9 +71,9 @@ chatForm.addEventListener("submit", async (e) => {
       const messagesRef = collection(exerciseDocRef, "messages"); // Get the messages subcollection reference
 
       await addDoc(messagesRef, {
-        text: data.description.content,
+        text: feedbackHtml, // Store the HTML-formatted feedback
         timestamp: serverTimestamp(),
-        userId: userId, // Include th
+        userId: userId,
       }); // Add the user message to the messages subcollection
     } else {
       console.error("Active exercise document ID not found");

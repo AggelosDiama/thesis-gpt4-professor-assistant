@@ -17,17 +17,17 @@
   <body>
     <div class="page-container">
       <div class="sidebar">
-        <div class="filter-section">
+        <!-- <div class="filter-section">
           <p>Filter by:</p>
           <select class="main-btn filter-btn">
             <option value="name" selected>Name</option>
             <option value="date">Date</option>
           </select>
-        </div>
-
+        </div> -->
+        <!-- chat-history -->
         <div class="divider"></div>
-        <div class="chat-history">
-          <p><b>Chat History</b></p>
+        <div class="exercise-list">
+          <p><b></b></p>
           <ul>
             <!-- Add more list items as needed -->
           </ul>
@@ -39,6 +39,9 @@
             <div class="secondary-btn dropdown" onclick="toggleDropdown()">
               <a href="index.html" class="username" id="usernameLink">...</a>
               <div class="dropdown-content">
+                <button class="secondary-btn logout" id="settingsButton">
+                  Settings
+                </button>
                 <button class="secondary-btn logout" id="logoutButton">
                   Logout
                 </button>
@@ -56,12 +59,18 @@
         </div>
         <div class="input-section">
           <form id="chat-form">
-            <input
+            <!-- <input
               id="chat-input"
               class="chat-input"
               type="text"
               placeholder="Send a message"
-            />
+            /> -->
+            <textarea
+              name="chat-input"
+              class="chat-input"
+              id="chat-input"
+              placeholder="Send a message"
+            ></textarea>
             <button class="main-btn" type="submit">Send</button>
           </form>
           <p>
