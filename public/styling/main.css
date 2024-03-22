@@ -192,6 +192,7 @@ body {
 
 .input-section textarea {
   padding: 10px;
+  padding-top: 20px;
   width: 683px;
   height: 30px;
   margin-left: 10px;
@@ -200,6 +201,7 @@ body {
   font-size: 18px;
   border-radius: 15px;
   border: none;
+  color: black;
 }
 
 .input-section p {
@@ -231,7 +233,7 @@ body {
   margin: 5% auto; /* 15% from the top and centered */
   padding: 20px;
   border: 1px solid #888;
-  width: 80%; /* Could be more or less, depending on screen size */
+  width: 40%;
 }
 
 /* The Close Button */

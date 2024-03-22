@@ -26,6 +26,6 @@ loginForm.addEventListener("submit", async (e) => {
       window.location.href = "./join-exe.html";
     }
   } catch (err) {
-    console.log(err.message);
+    alert(err.message);
   }
 });

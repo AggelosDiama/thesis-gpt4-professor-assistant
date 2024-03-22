@@ -9,7 +9,6 @@ import {
   setDoc,
   serverTimestamp,
   addDoc,
-  Timestamp,
 } from "firebase/firestore";
 
 // Function to toggle the dropdown menu
@@ -19,7 +18,7 @@ window.toggleDropdown = function () {
 };
 
 // Global variable to store the ID of the active exercise document
-let ActiveExerciseDocId;
+export let ActiveExerciseDocId = "0";
 
 // Function to create a new exercise document in Firestore
 async function createNewExercise(title, date, visibility) {
@@ -29,13 +28,19 @@ async function createNewExercise(title, date, visibility) {
   // Store the ID of the active exercise document
   ActiveExerciseDocId = newExerciseDoc.id;
   // Store the ID of the active exercise document in localStorage
-  localStorage.setItem("ActiveExerciseDocId", ActiveExerciseDocId);
+
+  //localStorage.setItem("ActiveExerciseDocId", ActiveExerciseDocId);
+  console.log(ActiveExerciseDocId);
 
   // Initialize the messages subcollection for this exercise
   const messagesRef = collection(newExerciseDoc, "messages");
   await addDoc(messagesRef, {
-    text: "Exercise created",
+    message: {
+      role: "user",
+      content: ``,
+    },
     timestamp: serverTimestamp(),
+    userId: null,
   });
 
   // Update the UI with the new exercise
@@ -56,8 +61,8 @@ function selectExercise(event) {
   ActiveExerciseDocId = exerciseId;
 
   // Update the localStorage
-  localStorage.setItem("ActiveExerciseDocId", ActiveExerciseDocId);
-  console.log(localStorage.getItem("ActiveExerciseDocId"));
+  //localStorage.setItem("ActiveExerciseDocId", ActiveExerciseDocId);
+  console.log(ActiveExerciseDocId);
 }
 
 // Function to create the new exercise button based on user role
@@ -79,6 +84,17 @@ function createNewExerciseButton(user) {
 
   return newExerciseButton;
 }
+
+// Check authentication state on page load
+window.addEventListener("DOMContentLoaded", () => {
+  // Add an authentication state observer
+  auth.onAuthStateChanged((user) => {
+    if (!user) {
+      // User is not signed in, redirect to login page
+      window.location.href = "/index.html"; // Redirect to your login page
+    }
+  });
+});
 
 //logging out
 const logoutButton = document.getElementById("logoutButton");
@@ -114,6 +130,7 @@ onAuthStateChanged(auth, async (user) => {
         exerciseList.textContent = " ";
         const exercisesRef = collection(getFirestore(), "exercises");
         const querySnapshot = await getDocs(exercisesRef);
+
         querySnapshot.forEach((doc) => {
           const exercise = doc.data();
           //console.log(exercise);
