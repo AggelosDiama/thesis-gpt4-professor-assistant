@@ -18,7 +18,7 @@ window.toggleDropdown = function () {
 };
 
 // Global variable to store the ID of the active exercise document
-export let ActiveExerciseDocId = "0";
+export let ActiveExerciseDocId = null;
 
 // Function to create a new exercise document in Firestore
 async function createNewExercise(title, date, visibility) {
