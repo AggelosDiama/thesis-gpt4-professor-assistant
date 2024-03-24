@@ -8,14 +8,16 @@ import {
   addDoc,
   serverTimestamp,
 } from "firebase/firestore"; // Import Firestore functions
-import { ActiveExerciseDocId } from "./main.js";
+//import { ActiveExerciseDocId } from "./main.js";
+
+// let ActiveExerciseDocId = ActiveExerciseDocId;
 
 // Forms
 const chatForm = document.getElementById("chat-form");
 const formInput = document.getElementById("chat-input");
 const messagesContainer = document.querySelector(".messages");
 
-//let ActiveExerciseDocId = localStorage.getItem("ActiveExerciseDocId");
+let ActiveExerciseDocId = localStorage.getItem("ActiveExerciseDocId");
 
 // Initialize an empty array to store messages from Firestore
 let messages = [];
@@ -69,10 +71,27 @@ if (ActiveExerciseDocId) {
     messages.push(doc.data().message);
     //console.log(doc.data().message);
   });
+  // Sort messages based on timestamp before rendering
+  messages.sort((a, b) => a.timestamp - b.timestamp);
   console.log(messages);
 } else {
   console.error("Active exercise document ID not found");
 }
+
+// Function to handle storage event
+function handleStorageEvent(event) {
+  if (event.key === "ActiveExerciseDocId") {
+    ActiveExerciseDocId = event.newValue; // Update the ActiveExerciseDocId variable
+    console.log(
+      "ActiveExerciseDocId updated from localStorage:",
+      ActiveExerciseDocId
+    );
+    // Now you can perform any additional actions or updates based on the new value
+  }
+}
+
+// Listen for storage events
+window.addEventListener("storage", handleStorageEvent);
 
 chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();
