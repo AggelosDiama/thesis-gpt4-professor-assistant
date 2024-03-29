@@ -7,10 +7,10 @@ import {
   getDocs,
   addDoc,
   serverTimestamp,
+  query,
+  where,
+  orderBy,
 } from "firebase/firestore"; // Import Firestore functions
-//import { ActiveExerciseDocId } from "./main.js";
-
-// let ActiveExerciseDocId = ActiveExerciseDocId;
 
 // Forms
 const chatForm = document.getElementById("chat-form");
@@ -34,11 +34,36 @@ const determineEndpoint = async () => {
     if (userData && userData.isProfessor) {
       endpoint = "professorChatRule";
     }
+    if (!userData || !userData.isProfessor) {
+      // Retrieve messages that have isProfessor set to true
+      const exerciseDocRef = doc(
+        getFirestore(),
+        "exercises",
+        ActiveExerciseDocId
+      );
+      const messagesQuery = query(
+        collection(exerciseDocRef, "messages"),
+        where("isProfessor", "==", true)
+      );
+
+      const messagesQuerySnapshot = await getDocs(messagesQuery);
+
+      messages = []; // Clear previous messages
+
+      messagesQuerySnapshot.forEach((doc) => {
+        messages.push(doc.data().message.content);
+      });
+    }
   }
 };
 
 // Define the function to add a new message to Firestore
-async function addMessageToFirestore(ActiveExerciseDocId, text, userId) {
+async function addMessageToFirestore(
+  ActiveExerciseDocId,
+  text,
+  userId,
+  isProfessor
+) {
   try {
     const exerciseDocRef = doc(
       getFirestore(),
@@ -50,12 +75,60 @@ async function addMessageToFirestore(ActiveExerciseDocId, text, userId) {
     await addDoc(messagesRef, {
       message: text,
       timestamp: serverTimestamp(),
-      userId: userId || null, // If userId is not provided, use null
+      userId: userId || null,
+      isProfessor: isProfessor || false, // Default to false if isProfessor is not provided
     });
 
     console.log("Message added to Firestore successfully");
   } catch (error) {
     console.error("Error adding message to Firestore:", error);
+  }
+}
+
+// Function to create a new exercise with automatic name and update UI
+async function createNewExercise() {
+  try {
+    const exercisesRef = collection(getFirestore(), "exercises");
+    const querySnapshot = await getDocs(exercisesRef);
+
+    const exerciseNumber = querySnapshot.size + 1; // Increment the exercise number
+    const currentDate = new Date().toISOString().split("T")[0]; // Get today's date
+
+    const exerciseTitle = `Exercise ${exerciseNumber}`;
+    const exerciseDate = currentDate;
+    const visibility = true; // Set visibility as needed
+
+    const newExerciseDoc = await addDoc(exercisesRef, {
+      title: exerciseTitle,
+      date: exerciseDate,
+      visibility: visibility,
+    });
+
+    // Initialize the messages subcollection for this exercise
+    const messagesRef = collection(newExerciseDoc, "messages");
+    await addDoc(messagesRef, {
+      message: {
+        role: "user",
+        content: ``,
+      },
+      timestamp: serverTimestamp(),
+      userId: null,
+      isProfessor: false,
+    });
+
+    // Update ActiveExerciseDocId and store in localStorage
+    ActiveExerciseDocId = newExerciseDoc.id;
+    localStorage.setItem("ActiveExerciseDocId", ActiveExerciseDocId);
+    console.log("New exercise created:", ActiveExerciseDocId);
+
+    // Update the UI with the new exercise
+    const exerciseList = document.querySelector(".exercise-list ul");
+    const exerciseItem = document.createElement("li");
+    exerciseItem.textContent = `${exerciseTitle} - ${exerciseDate}`;
+    exerciseItem.setAttribute("doc-id", ActiveExerciseDocId); // Add the ID attribute
+    exerciseList.appendChild(exerciseItem);
+  } catch (error) {
+    console.error("Error creating new exercise:", error);
   }
 }
 
@@ -104,15 +177,22 @@ chatForm.addEventListener("submit", async (e) => {
     const newUserMessage = { role: "user", content: `${userMessage}` };
     messages.push(newUserMessage);
 
+    // Check if ActiveExerciseDocId is null and create a new exercise
+    if (!ActiveExerciseDocId) {
+      await createNewExercise();
+    }
+
     // Store the message in Firestore
     if (ActiveExerciseDocId) {
       await addMessageToFirestore(
         ActiveExerciseDocId,
         newUserMessage,
-        user?.uid
+        user?.uid,
+        user.isProfessor
       );
     } else {
-      console.error("Active exercise document ID not found");
+      console.error("Active exercise document ID not found after creation");
+      throw new Error("Failed to create or retrieve ActiveExerciseDocId");
     }
 
     formInput.value = "";
@@ -151,7 +231,8 @@ chatForm.addEventListener("submit", async (e) => {
       await addMessageToFirestore(
         ActiveExerciseDocId,
         newAssistantMessage,
-        user?.uid
+        user?.uid,
+        user.isProfessor
       );
     } else {
       console.error("Active exercise document ID not found");

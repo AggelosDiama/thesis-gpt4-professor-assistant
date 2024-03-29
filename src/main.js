@@ -12,7 +12,6 @@ import {
   orderBy,
   query,
 } from "firebase/firestore";
-import { getMessages, setMessages } from "./sharedMessages.js";
 
 // Function to toggle the dropdown menu
 window.toggleDropdown = function () {
@@ -25,7 +24,7 @@ window.toggleDropdown = function () {
 let ActiveExerciseDocId;
 
 // Initialize an empty array to store messages from Firestore
-let messages = getMessages();
+let messages = [];
 
 // Update ActiveExerciseDocId and store in localStorage
 function updateActiveExerciseDocId(newId) {
@@ -46,11 +45,7 @@ async function createNewExercise(title, date, visibility) {
   const newExerciseDoc = await addDoc(docRef, { title, date, visibility }); // Add document and get the reference
 
   // Store the ID of the active exercise document
-  //ActiveExerciseDocId = newExerciseDoc.id;
   updateActiveExerciseDocId(newExerciseDoc.id);
-  // Store the ID of the active exercise document in localStorage
-
-  //localStorage.setItem("ActiveExerciseDocId", ActiveExerciseDocId);
   console.log(ActiveExerciseDocId);
 
   // Initialize the messages subcollection for this exercise
@@ -62,6 +57,7 @@ async function createNewExercise(title, date, visibility) {
     },
     timestamp: serverTimestamp(),
     userId: null,
+    isProfessor: false,
   });
 
   // Update the UI with the new exercise

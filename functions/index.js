@@ -22,7 +22,7 @@ export const professorChatRule = onRequest(async (req, res) => {
 });
 
 export const studentChatRule = onRequest(async (req, res) => {
-  const { userInput } = req.body;
+  const { messages } = req.body;
 
   const description = await openai.chat.completions.create({
     model: "gpt-3.5-turbo", //3.5 for FE testing, change later to 4
@@ -33,8 +33,9 @@ export const studentChatRule = onRequest(async (req, res) => {
       },
       {
         role: "user",
-        content: `Provide feedback for the following Python code:${userInput}. Give the feedback in an HTML format, meaning to wrap elements with p tags, add break lines when needed and add text decorations with bold tags. Don't add <html>, <body> or other tags, only the ones related to text.`,
+        content: `According to the following messages, get the code exercise, the evalaution criteria and finally my solution to the code and give me feedback for improvements and mistakes and grade me from 1 to 10 according to the criteria`,
       },
+      ...messages,
     ],
     max_tokens: 1000,
   });
