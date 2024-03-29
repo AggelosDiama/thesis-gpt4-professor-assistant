@@ -9,7 +9,8 @@ import {
   setDoc,
   serverTimestamp,
   addDoc,
-  Timestamp,
+  orderBy,
+  query,
 } from "firebase/firestore";
 
 // Function to toggle the dropdown menu
@@ -19,7 +20,24 @@ window.toggleDropdown = function () {
 };
 
 // Global variable to store the ID of the active exercise document
+//localStorage.clear();
 let ActiveExerciseDocId;
+
+// Initialize an empty array to store messages from Firestore
+let messages = [];
+
+// Update ActiveExerciseDocId and store in localStorage
+function updateActiveExerciseDocId(newId) {
+  ActiveExerciseDocId = newId;
+  localStorage.setItem("ActiveExerciseDocId", newId);
+
+  // Trigger the storage event
+  const storageEvent = new StorageEvent("storage", {
+    key: "ActiveExerciseDocId",
+    newValue: newId,
+  });
+  window.dispatchEvent(storageEvent);
+}
 
 // Function to create a new exercise document in Firestore
 async function createNewExercise(title, date, visibility) {
@@ -27,15 +45,19 @@ async function createNewExercise(title, date, visibility) {
   const newExerciseDoc = await addDoc(docRef, { title, date, visibility }); // Add document and get the reference
 
   // Store the ID of the active exercise document
-  ActiveExerciseDocId = newExerciseDoc.id;
-  // Store the ID of the active exercise document in localStorage
-  localStorage.setItem("ActiveExerciseDocId", ActiveExerciseDocId);
+  updateActiveExerciseDocId(newExerciseDoc.id);
+  console.log(ActiveExerciseDocId);
 
   // Initialize the messages subcollection for this exercise
   const messagesRef = collection(newExerciseDoc, "messages");
   await addDoc(messagesRef, {
-    text: "Exercise created",
+    message: {
+      role: "user",
+      content: ``,
+    },
     timestamp: serverTimestamp(),
+    userId: null,
+    isProfessor: false,
   });
 
   // Update the UI with the new exercise
@@ -47,17 +69,89 @@ async function createNewExercise(title, date, visibility) {
   exerciseList.appendChild(ExerciseItem);
 }
 
-// Event listener function to select an exercise
+// Function to handle exercise selection
 function selectExercise(event) {
   // Get the ID of the selected exercise
   const exerciseId = event.currentTarget.getAttribute("doc-id");
 
-  // Update the ActiveExerciseDocId
-  ActiveExerciseDocId = exerciseId;
+  updateActiveExerciseDocId(exerciseId);
+  console.log("select exercise", ActiveExerciseDocId);
 
-  // Update the localStorage
-  localStorage.setItem("ActiveExerciseDocId", ActiveExerciseDocId);
-  console.log(localStorage.getItem("ActiveExerciseDocId"));
+  // Clear the messages array
+  messages = [];
+
+  // Retrieve messages for the selected exercise
+  retrieveMessages();
+}
+
+// Retrieve messages from Firestore for the selected exercise and current user
+async function retrieveMessages() {
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      console.error("User not authenticated");
+      return;
+    }
+
+    const userDocRef = doc(getFirestore(), "users", user.uid);
+    const userDocSnapshot = await getDoc(userDocRef);
+    const userData = userDocSnapshot.data();
+
+    if (!userData || !userData.isProfessor) {
+      console.error("User is not a professor");
+      return;
+    }
+
+    if (ActiveExerciseDocId) {
+      const exerciseDocRef = doc(
+        getFirestore(),
+        "exercises",
+        ActiveExerciseDocId
+      );
+      const messagesQuery = query(
+        collection(exerciseDocRef, "messages"),
+        orderBy("timestamp", "asc")
+      );
+
+      const messagesQuerySnapshot = await getDocs(messagesQuery);
+
+      messages = []; // Clear previous messages
+
+      messagesQuerySnapshot.forEach((doc) => {
+        messages.push(doc.data().message.content);
+      });
+
+      // Update the UI with the messages
+      updateMessagesUI();
+    } else {
+      console.error("Active exercise document ID not found");
+    }
+  } catch (error) {
+    console.error("Error retrieving messages:", error);
+  }
+}
+
+// Update the UI with the messages
+function updateMessagesUI() {
+  const messagesContainer = document.querySelector(".messages");
+  messagesContainer.innerHTML = ""; // Clear previous messages
+
+  // Sort messages based on timestamp before rendering
+  messages.sort((a, b) => a.timestamp - b.timestamp);
+
+  messages.forEach((msg) => {
+    if (msg.trim() !== "") {
+      const messageElement = document.createElement("div");
+      messageElement.classList.add("user-message"); // Add class for styling
+      messageElement.innerHTML = `
+        <div class="message__text">${msg}</div>
+      `;
+      messagesContainer.appendChild(messageElement);
+    }
+  });
+
+  // Scroll to the bottom of the messages container
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
 // Function to create the new exercise button based on user role
@@ -80,11 +174,23 @@ function createNewExerciseButton(user) {
   return newExerciseButton;
 }
 
+// Check authentication state on page load
+window.addEventListener("DOMContentLoaded", () => {
+  // Add an authentication state observer
+  auth.onAuthStateChanged((user) => {
+    if (!user) {
+      // User is not signed in, redirect to login page
+      window.location.href = "/index.html"; // Redirect to your login page
+    }
+  });
+});
+
 //logging out
 const logoutButton = document.getElementById("logoutButton");
 logoutButton.addEventListener("click", () => {
   signOut(auth)
     .then(() => {
+      localStorage.clear();
       console.log("user signed out");
       // Redirect to index.html after logout
       window.location.href = "index.html";
@@ -114,6 +220,7 @@ onAuthStateChanged(auth, async (user) => {
         exerciseList.textContent = " ";
         const exercisesRef = collection(getFirestore(), "exercises");
         const querySnapshot = await getDocs(exercisesRef);
+
         querySnapshot.forEach((doc) => {
           const exercise = doc.data();
           //console.log(exercise);
