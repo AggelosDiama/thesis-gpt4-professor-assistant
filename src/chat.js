@@ -22,6 +22,11 @@ let ActiveExerciseDocId = localStorage.getItem("ActiveExerciseDocId");
 // Initialize an empty array to store messages from Firestore
 let messages = [];
 
+// Initialize flags and counts
+let studentsJoinedCount = 0;
+let studentSubmitCount = 0;
+let allStudentsSubmit = false;
+
 // Check if the user is a professor
 let endpoint = "studentChatRule"; // Default endpoint
 const determineEndpoint = async () => {
@@ -56,6 +61,37 @@ const determineEndpoint = async () => {
     }
   }
 };
+
+// Check counts and set flags
+async function checkCountsAndFlags() {
+  if (
+    studentsJoinedCount > 0 &&
+    studentSubmitCount > 0 &&
+    studentsJoinedCount === studentSubmitCount
+  ) {
+    allStudentsSubmit = true;
+    endpoint = "professorReportChatRule"; // Change endpoint
+    console.log("All students have submitted. Endpoint changed.");
+
+    // Fetch messages based on criteria when allStudentsSubmit is true
+    const exerciseDocRef = doc(
+      getFirestore(),
+      "exercises",
+      ActiveExerciseDocId
+    );
+    const messagesQuery = query(
+      collection(exerciseDocRef, "messages"),
+      where("isProfessor", "==", false),
+      where("message.role", "==", "assistant")
+    );
+    const messagesQuerySnapshot = await getDocs(messagesQuery);
+
+    messages = []; // Clear previous messages
+    messagesQuerySnapshot.forEach((doc) => {
+      messages.push(doc.data().message.content);
+    });
+  }
+}
 
 // Define the function to add a new message to Firestore
 async function addMessageToFirestore(
@@ -102,6 +138,9 @@ async function createNewExercise() {
       title: exerciseTitle,
       date: exerciseDate,
       visibility: visibility,
+      studentsJoinedCount: 0, // Initialize studentsJoinedCount to 0
+      studentSubmitCount: 0, // Initialize studentSubmitCount to 0
+      allStudentsSubmit: false, // Initialize allStudentsSubmit to false
     });
 
     // Initialize the messages subcollection for this exercise
@@ -182,6 +221,12 @@ chatForm.addEventListener("submit", async (e) => {
       await createNewExercise();
     }
 
+    // Increment studentSubmitCount if user is a student
+    if (user && !user.isProfessor) {
+      studentSubmitCount++;
+      await updateStudentSubmitCount(); // Update Firestore count
+    }
+
     // Store the message in Firestore
     if (ActiveExerciseDocId) {
       await addMessageToFirestore(
@@ -194,6 +239,9 @@ chatForm.addEventListener("submit", async (e) => {
       console.error("Active exercise document ID not found after creation");
       throw new Error("Failed to create or retrieve ActiveExerciseDocId");
     }
+
+    // Check counts and set flags
+    await checkCountsAndFlags();
 
     formInput.value = "";
 
@@ -255,3 +303,20 @@ chatForm.addEventListener("submit", async (e) => {
     console.error("Error fetching data:", error);
   }
 });
+
+// Function to update studentSubmitCount in Firestore
+async function updateStudentSubmitCount() {
+  try {
+    const exerciseDocRef = doc(
+      getFirestore(),
+      "exercises",
+      ActiveExerciseDocId
+    );
+    await updateDoc(exerciseDocRef, {
+      studentSubmitCount: studentSubmitCount,
+    });
+    console.log("studentSubmitCount updated successfully");
+  } catch (error) {
+    console.error("Error updating studentSubmitCount:", error);
+  }
+}

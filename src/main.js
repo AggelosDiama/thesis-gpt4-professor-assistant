@@ -42,7 +42,14 @@ function updateActiveExerciseDocId(newId) {
 // Function to create a new exercise document in Firestore
 async function createNewExercise(title, date, visibility) {
   const docRef = collection(getFirestore(), "exercises"); // Get a reference to the collection
-  const newExerciseDoc = await addDoc(docRef, { title, date, visibility }); // Add document and get the reference
+  const newExerciseDoc = await addDoc(docRef, {
+    title,
+    date,
+    visibility,
+    studentsJoinedCount: 0, // Initialize studentsJoinedCount to 0
+    studentSubmitCount: 0, // Initialize studentSubmitCount to 0
+    allStudentsSubmit: false, // Initialize allStudentsSubmit to false
+  }); // Add document and get the reference
 
   // Store the ID of the active exercise document
   updateActiveExerciseDocId(newExerciseDoc.id);

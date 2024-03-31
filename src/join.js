@@ -49,6 +49,19 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
+// Increment studentsJoinedCount when a student joins an exercise
+async function joinExercise(exerciseId) {
+  try {
+    const exerciseDocRef = doc(getFirestore(), "exercises", exerciseId);
+    await updateDoc(exerciseDocRef, {
+      studentsJoinedCount: increment(1),
+    });
+    console.log("studentsJoinedCount incremented successfully");
+  } catch (error) {
+    console.error("Error incrementing studentsJoinedCount:", error);
+  }
+}
+
 // Event listener function to select an exercise
 function selectExercise(event) {
   // Get the ID of the selected exercise
@@ -59,7 +72,9 @@ function selectExercise(event) {
 
   // Update the localStorage
   localStorage.setItem("ActiveExerciseDocId", ActiveExerciseDocId);
-  //console.log(localStorage.getItem("ActiveExerciseDocId"));
+
+  // Increment studentsJoinedCount
+  joinExercise(exerciseId);
 
   // Redirect to the main.html page
   window.location.href = "main.html";
