@@ -46,9 +46,11 @@ async function createNewExercise(title, date, visibility) {
     title,
     date,
     visibility,
-    studentsJoinedCount: 0, // Initialize studentsJoinedCount to 0
-    studentSubmitCount: 0, // Initialize studentSubmitCount to 0
-    allStudentsSubmit: false, // Initialize allStudentsSubmit to false
+    reportInfo: {
+      studentsJoinedCount: 0, // Initialize studentsJoinedCount to 0
+      studentSubmitCount: 0, // Initialize studentSubmitCount to 0
+      allStudentsSubmit: false, // Initialize allStudentsSubmit to false
+    },
   }); // Add document and get the reference
 
   // Store the ID of the active exercise document
@@ -320,3 +322,18 @@ document
     // Reset the form
     event.target.reset();
   });
+
+// Function to adjust textarea height
+function adjustTextareaHeight() {
+  const textarea = document.getElementById("chat-input");
+  textarea.style.height = "auto"; // Reset height to auto
+  textarea.style.height = textarea.scrollHeight + 2 + "px"; // Set height based on content
+}
+
+// Event listener to adjust textarea height on input
+document
+  .getElementById("chat-input")
+  .addEventListener("input", adjustTextareaHeight);
+
+// Call the function initially to set the textarea height
+adjustTextareaHeight();

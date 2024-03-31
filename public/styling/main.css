@@ -190,13 +190,16 @@ body {
   margin-top: auto; /* Push to the bottom */
 }
 
-.input-section textarea {
+.chat-input {
   padding: 10px;
   width: 683px;
-  height: 30px;
   margin-left: 10px;
+  resize: vertical; /* Allow vertical resizing */
+  min-height: 30px; /* Set a minimum height */
+  max-height: 200px; /* Set a maximum height if needed */
+  overflow-y: auto;
   background-color: #dddde1;
-  color: #9c9ea2;
+  color: #434446;
   font-size: 18px;
   border-radius: 15px;
   border: none;

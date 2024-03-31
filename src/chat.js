@@ -138,9 +138,11 @@ async function createNewExercise() {
       title: exerciseTitle,
       date: exerciseDate,
       visibility: visibility,
-      studentsJoinedCount: 0, // Initialize studentsJoinedCount to 0
-      studentSubmitCount: 0, // Initialize studentSubmitCount to 0
-      allStudentsSubmit: false, // Initialize allStudentsSubmit to false
+      reportInfo: {
+        studentsJoinedCount: 0, // Initialize studentsJoinedCount to 0
+        studentSubmitCount: 0, // Initialize studentSubmitCount to 0
+        allStudentsSubmit: false, // Initialize allStudentsSubmit to false
+      },
     });
 
     // Initialize the messages subcollection for this exercise
