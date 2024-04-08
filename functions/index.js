@@ -5,7 +5,7 @@ export const professorChatRule = onRequest(async (req, res) => {
   const { messages } = req.body;
 
   const description = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo", //3.5 for FE testing, change later to 4
+    model: "gpt-4", //3.5 for FE testing, change later to 4
     messages: [
       {
         role: "system",
@@ -45,7 +45,7 @@ export const studentChatRule = onRequest(async (req, res) => {
   const { messages } = req.body;
 
   const description = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo", //3.5 for FE testing, change later to 4
+    model: "gpt-4", //3.5 for FE testing, change later to 4
     messages: [
       {
         role: "system",
