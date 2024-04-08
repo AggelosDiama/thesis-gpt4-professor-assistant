@@ -17,6 +17,7 @@ body {
   border-radius: 25px;
   font-size: 16px;
   cursor: pointer;
+  margin-left: 10px;
 }
 
 .main-btn:hover {
@@ -38,6 +39,26 @@ body {
 
 .secondary-btn:hover {
   background-color: #333336;
+}
+
+.user-btn {
+  background-color: #fff;
+  color: #333;
+}
+
+.user-btn:hover {
+  background-color: #fff;
+  opacity: 0.7;
+}
+
+.user-btn img {
+  display: inline-block;
+  width: 20px; /* Adjust icon width as needed */
+  height: 20px; /* Adjust icon height as needed */
+  background-size: cover;
+  margin-right: 5px;
+  position: relative;
+  top: 3px;
 }
 
 .sidebar {
@@ -69,6 +90,10 @@ body {
 }
 
 .exercise-list li:hover {
+  background-color: #873236;
+}
+
+.exercise-list li.active {
   background-color: #873236;
 }
 
@@ -121,7 +146,7 @@ body {
   display: none;
   position: absolute;
   width: 100%;
-  top: -100px;
+  top: -110px;
   right: -5px;
   padding: 7px;
   border-radius: 7px;
@@ -147,14 +172,32 @@ body {
 
 .secondary-btn.logout {
   width: 80px;
-  font-size: 13px;
-  padding: 6px;
+  font-size: 16px;
+  padding: 8px;
   margin-bottom: 0px;
   margin-top: 5px;
 }
 
 .secondary-btn.logout:hover {
   background-color: rgba(255, 255, 255, 0.2);
+}
+
+.secondary-btn.logout .icon {
+  display: inline-block;
+  width: 15px; /* Adjust icon width as needed */
+  height: 15px; /* Adjust icon height as needed */
+  background-image: url("../images/logout.png");
+  background-size: cover;
+  margin-right: 5px; /* Add margin between icon and text */
+}
+
+#settingsButton .icon {
+  display: inline-block;
+  width: 15px; /* Adjust icon width as needed */
+  height: 15px; /* Adjust icon height as needed */
+  background-image: url("../images/setting.png");
+  background-size: cover;
+  margin-right: 5px; /* Add margin between icon and text */
 }
 
 .chat-container {
@@ -179,30 +222,63 @@ body {
   flex-direction: column;
 }
 
-.user-message {
+.default-message {
+  font-size: large;
+}
+
+.user-message:nth-child(even) {
   background-color: #f2f2f2; /* Lighter background color */
+}
+
+.user-message:nth-child(odd) {
+  background-color: #ffffff; /* White background color */
+}
+
+.user-message {
   padding: 10px;
   border-radius: 10px;
   margin: 5px 0;
 }
 
+.message-username {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
 .input-section {
-  margin-top: auto; /* Push to the bottom */
+  position: relative;
+}
+
+#input-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  border: 1px solid #ccc;
+  border-radius: 15px;
+  margin-top: 8px;
 }
 
 .chat-input {
-  padding: 10px;
+  padding-top: 16px;
+  padding-left: 16px;
   width: 683px;
-  margin-left: 10px;
-  resize: vertical; /* Allow vertical resizing */
-  min-height: 30px; /* Set a minimum height */
-  max-height: 200px; /* Set a maximum height if needed */
+  min-height: 30px;
+  max-height: 200px;
   overflow-y: auto;
-  background-color: #dddde1;
   color: #434446;
   font-size: 18px;
   border-radius: 15px;
   border: none;
+  outline: none;
+  flex: 1;
+  resize: vertical;
+  background-color: transparent;
+}
+
+/* Positioning the input-container to bottom right */
+.input-section .main-btn {
+  margin-right: 8px;
+  margin-bottom: 12px;
 }
 
 .input-section p {
@@ -230,11 +306,37 @@ body {
 
 /* Modal Content */
 .modal-content {
-  background-color: #fefefe;
+  background-color: #5b5f69;
   margin: 5% auto; /* 15% from the top and centered */
-  padding: 20px;
+  padding: 32px;
+  padding-bottom: 22px;
   border: 1px solid #888;
-  width: 80%; /* Could be more or less, depending on screen size */
+  border-radius: 8px;
+  width: 80%;
+  max-width: 340px;
+  color: white;
+}
+
+.modal-content input {
+  border-radius: 4px;
+  border: none;
+  padding: 8px;
+  margin-bottom: 12px;
+}
+
+.modal-content label {
+  font-size: 18px;
+  margin-right: 12px;
+}
+
+.modal-content button {
+  margin-top: 12px;
+  margin-right: 8px;
+  padding: 14px 22px;
+}
+
+.cancel-btn {
+  min-width: 0px;
 }
 
 /* The Close Button */
@@ -250,17 +352,6 @@ body {
   color: black;
   text-decoration: none;
   cursor: pointer;
-}
-
-/* Form */
-form {
-  display: flex;
-  flex-direction: column;
-}
-
-label,
-input {
-  margin-bottom: 10px;
 }
 
 button {

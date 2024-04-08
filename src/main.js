@@ -6,11 +6,13 @@ import {
   doc,
   getDoc,
   getDocs,
-  setDoc,
   serverTimestamp,
   addDoc,
   orderBy,
   query,
+  where,
+  updateDoc,
+  increment,
 } from "firebase/firestore";
 
 // Function to toggle the dropdown menu
@@ -21,7 +23,7 @@ window.toggleDropdown = function () {
 
 // Global variable to store the ID of the active exercise document
 //localStorage.clear();
-let ActiveExerciseDocId;
+let ActiveExerciseDocId = localStorage.getItem("ActiveExerciseDocId");
 
 // Initialize an empty array to store messages from Firestore
 let messages = [];
@@ -49,7 +51,6 @@ async function createNewExercise(title, date, visibility) {
     reportInfo: {
       studentsJoinedCount: 0, // Initialize studentsJoinedCount to 0
       studentSubmitCount: 0, // Initialize studentSubmitCount to 0
-      allStudentsSubmit: false, // Initialize allStudentsSubmit to false
     },
   }); // Add document and get the reference
 
@@ -76,6 +77,10 @@ async function createNewExercise(title, date, visibility) {
   ExerciseItem.setAttribute("doc-id", ActiveExerciseDocId); // Add the ID attribute
   ExerciseItem.addEventListener("click", selectExercise); // Add event listener
   exerciseList.appendChild(ExerciseItem);
+
+  messages = [];
+  const messagesContainer = document.querySelector(".messages");
+  messagesContainer.innerHTML = ""; // Clear all messages from the container
 }
 
 // Function to handle exercise selection
@@ -88,6 +93,15 @@ function selectExercise(event) {
 
   // Clear the messages array
   messages = [];
+
+  // Remove active class from all exercise list items
+  const exerciseListItems = document.querySelectorAll(".exercise-list ul li");
+  exerciseListItems.forEach((item) => {
+    item.classList.remove("active");
+  });
+
+  // Add active class to the clicked exercise list item
+  event.currentTarget.classList.add("active");
 
   // Retrieve messages for the selected exercise
   retrieveMessages();
@@ -119,6 +133,7 @@ async function retrieveMessages() {
       );
       const messagesQuery = query(
         collection(exerciseDocRef, "messages"),
+        where("userId", "==", user.uid), // Filter messages by userId
         orderBy("timestamp", "asc")
       );
 
@@ -127,7 +142,7 @@ async function retrieveMessages() {
       messages = []; // Clear previous messages
 
       messagesQuerySnapshot.forEach((doc) => {
-        messages.push(doc.data().message.content);
+        messages.push(doc.data().message);
       });
 
       // Update the UI with the messages
@@ -149,12 +164,31 @@ function updateMessagesUI() {
   messages.sort((a, b) => a.timestamp - b.timestamp);
 
   messages.forEach((msg) => {
-    if (msg.trim() !== "") {
+    if (msg.content.trim() !== "") {
       const messageElement = document.createElement("div");
       messageElement.classList.add("user-message"); // Add class for styling
-      messageElement.innerHTML = `
-        <div class="message__text">${msg}</div>
-      `;
+
+      // Create message content element
+      const messageContentElement = document.createElement("div");
+      messageContentElement.classList.add("message-content");
+      messageContentElement.textContent = msg.content;
+
+      // Create username element based on role
+      const usernameElement = document.createElement("div");
+      usernameElement.classList.add("message-username");
+      if (msg.role === "user") {
+        // Display the user's username
+        usernameElement.textContent =
+          auth.currentUser.displayName || "Username"; // Use username if available, else use "Username"
+      } else if (msg.role === "assistant") {
+        // Display "Assistant"
+        usernameElement.textContent = "Assistant";
+      }
+
+      // Append username and message content to message element
+      messageElement.appendChild(usernameElement);
+      messageElement.appendChild(messageContentElement);
+
       messagesContainer.appendChild(messageElement);
     }
   });
@@ -163,24 +197,59 @@ function updateMessagesUI() {
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
+// Function to decrement studentsJoinedCount when exiting an exercise
+async function exitExercise(exerciseId) {
+  try {
+    //exerciseId = "2twhWf7PlFyA5HUMxjW9";
+    const exerciseDocRef = doc(getFirestore(), "exercises", exerciseId);
+    await updateDoc(exerciseDocRef, {
+      "reportInfo.studentsJoinedCount": increment(-1),
+    });
+    console.log("studentsJoinedCount decremented successfully");
+  } catch (error) {
+    console.error("Error decrementing studentsJoinedCount:", error);
+  }
+}
+
 // Function to create the new exercise button based on user role
-function createNewExerciseButton(user) {
-  const newExerciseButton = document.createElement("button");
-  newExerciseButton.className = "new-exr-btn secondary-btn";
-  newExerciseButton.addEventListener("click", () => {
-    // Open the modal when the button is clicked
-    const modal = document.getElementById("myModal");
-    modal.style.display = "block";
-  });
+function createUserButton(user) {
+  // Check if the user is a professor
+  if (user && user.isProfessor) {
+    // Professor: Create the new exercise button
+    const newExerciseButton = document.createElement("button");
+    newExerciseButton.className = "secondary-btn user-btn";
+    newExerciseButton.addEventListener("click", () => {
+      // Open the modal when the button is clicked
+      const modal = document.getElementById("myModal");
+      modal.style.display = "block";
+    });
 
-  const newExerciseIcon = document.createElement("img");
-  newExerciseIcon.src = "./images/plus-solid (1).svg";
-  newExerciseButton.appendChild(newExerciseIcon);
+    const newExerciseIcon = document.createElement("img");
+    newExerciseIcon.src = "./images/plus.png";
+    newExerciseButton.appendChild(newExerciseIcon);
 
-  const newExerciseText = document.createTextNode("New Exercise");
-  newExerciseButton.appendChild(newExerciseText);
+    const newExerciseText = document.createTextNode("New Exercise");
+    newExerciseButton.appendChild(newExerciseText);
+    return newExerciseButton;
+  } else {
+    // Student: Create a button to select exercise and redirect
+    const selectExerciseButton = document.createElement("button");
+    selectExerciseButton.className = "secondary-btn user-btn";
+    selectExerciseButton.addEventListener("click", async () => {
+      // Call exitExercise before redirecting
+      await exitExercise(ActiveExerciseDocId);
+      window.location.href = "join-exe.html"; // Redirect to join-exe.html
+    });
 
-  return newExerciseButton;
+    const selectExerciseIcon = document.createElement("img");
+    selectExerciseIcon.src = "./images/left.png";
+    selectExerciseButton.appendChild(selectExerciseIcon);
+
+    const selectExerciseText = document.createTextNode("Select Exercise");
+    selectExerciseButton.appendChild(selectExerciseText);
+
+    return selectExerciseButton;
+  }
 }
 
 // Check authentication state on page load
@@ -217,12 +286,19 @@ onAuthStateChanged(auth, async (user) => {
       const userDocSnapshot = await getDoc(userDocRef);
       const userData = userDocSnapshot.data();
 
+      const messagesContainer = document.querySelector(".messages");
+
+      // Create the new user button
+      const newExerciseButton = createUserButton(userData);
+      const userSettings = document.querySelector(".user-settings");
+      userSettings.parentNode.insertBefore(newExerciseButton, userSettings);
+
+      // let defaultMessage;
+
       // Check if the user is a professor
       if (userData.isProfessor) {
-        // Create the new exercise button based on user role
-        const newExerciseButton = createNewExerciseButton(userData);
-        const userSettings = document.querySelector(".user-settings");
-        userSettings.parentNode.insertBefore(newExerciseButton, userSettings);
+        // defaultMessage =
+        //   "Begin a new exercise by typing below or select from the existing exercises on the left.";
 
         // Update the chat history with exercises from Firestore
         const exerciseList = document.querySelector(".exercise-list ul");
@@ -247,6 +323,9 @@ onAuthStateChanged(auth, async (user) => {
         document.querySelector(".exercise-list p b").textContent =
           "Exercises History";
       } else {
+        // defaultMessage =
+        //   "Read the instruction on the left before you submit your solution.";
+
         // Set the title for the exercise instructions
         document.querySelector(".exercise-list p b").textContent =
           "Exercise Instructions";
@@ -261,7 +340,32 @@ onAuthStateChanged(auth, async (user) => {
         const exerciseList = document.querySelector(".exercise-list ul");
         exerciseList.textContent = " ";
         exerciseList.appendChild(instructionsParagraph);
+
+        // Retrieve the active exercise document from Firestore
+        const exerciseDocRef = doc(
+          getFirestore(),
+          "exercises",
+          ActiveExerciseDocId
+        );
+        const exerciseDocSnapshot = await getDoc(exerciseDocRef);
+        const exerciseData = exerciseDocSnapshot.data();
+
+        // Create a div for the active exercise name
+        const activeExerciseDiv = document.createElement("div");
+        activeExerciseDiv.classList.add(".exercise-list");
+        activeExerciseDiv.textContent = `${exerciseData.title} - ${exerciseData.date}`;
+
+        // Get the divider
+        const divider = document.querySelector(".divider");
+
+        // Insert the div before the divider
+        divider.parentNode.insertBefore(activeExerciseDiv, divider);
       }
+
+      // const defaultMessageElement = document.createElement("div");
+      // defaultMessageElement.classList.add("default-message");
+      // defaultMessageElement.textContent = defaultMessage;
+      // messagesContainer.appendChild(defaultMessageElement);
     } catch (error) {
       console.error("Error:", error);
     }
@@ -276,28 +380,22 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 var modal = document.getElementById("myModal"); // Get the modal
-var newExerciseButton = document.querySelector(".new-exr-btn"); // Get the button that opens the modal
-// var span = document.getElementsByClassName("close")[0]; // Get the <span> element that closes the modal
-
-// When the user clicks the button, open the modal
-// newExerciseButton.onclick = function () {
-//   modal.style.display = "block";
-// };
+var span = document.getElementsByClassName("close")[0]; // Get the <span> element that closes the modal
 
 // When the user clicks on <span> (x), close the modal
-// span.onclick = function () {
-//   modal.style.display = "none";
-// };
+span.onclick = function () {
+  modal.style.display = "none";
+};
 
 // When the user clicks anywhere outside of the modal, close it
-// window.onclick = function (event) {
-//   if (event.target == modal) {
-//     modal.style.display = "none";
-//   }
-// };
+window.onclick = function (event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+};
 
 // When the user clicks on the "Cancel" button, close the modal
-var cancelButton = document.querySelector(".cancel-btn");
+var cancelButton = document.querySelector(".secondary-btn.cancel-btn");
 cancelButton.onclick = function () {
   modal.style.display = "none";
 };
@@ -326,7 +424,7 @@ document
 // Function to adjust textarea height
 function adjustTextareaHeight() {
   const textarea = document.getElementById("chat-input");
-  textarea.style.height = "auto"; // Reset height to auto
+  //textarea.style.height = "auto"; // Reset height to auto
   textarea.style.height = textarea.scrollHeight + 2 + "px"; // Set height based on content
 }
 

@@ -9,11 +9,11 @@ import {
   serverTimestamp,
   query,
   where,
-  orderBy,
+  updateDoc,
 } from "firebase/firestore"; // Import Firestore functions
 
 // Forms
-const chatForm = document.getElementById("chat-form");
+const chatForm = document.getElementById("input-container");
 const formInput = document.getElementById("chat-input");
 const messagesContainer = document.querySelector(".messages");
 
@@ -23,9 +23,31 @@ let ActiveExerciseDocId = localStorage.getItem("ActiveExerciseDocId");
 let messages = [];
 
 // Initialize flags and counts
-let studentsJoinedCount = 0;
-let studentSubmitCount = 0;
-let allStudentsSubmit = false;
+let studentsJoinedCount;
+let studentSubmitCount;
+
+// Initialize counts from Firestore
+async function initializeCountsFromFirestore() {
+  try {
+    const exerciseDocRef = doc(
+      getFirestore(),
+      "exercises",
+      ActiveExerciseDocId
+    );
+    const exerciseDocSnapshot = await getDoc(exerciseDocRef);
+    const exerciseData = exerciseDocSnapshot.data();
+
+    if (exerciseData) {
+      studentsJoinedCount = exerciseData.reportInfo.studentsJoinedCount || 0;
+      studentSubmitCount = exerciseData.reportInfo.studentSubmitCount || 0;
+    }
+  } catch (error) {
+    console.error("Error initializing counts from Firestore:", error);
+  }
+}
+
+// Call the function to initialize counts from Firestore
+// initializeCountsFromFirestore();
 
 // Check if the user is a professor
 let endpoint = "studentChatRule"; // Default endpoint
@@ -36,10 +58,12 @@ const determineEndpoint = async () => {
       doc(getFirestore(), "users", user.uid)
     );
     const userData = userDataSnapshot.data();
+
     if (userData && userData.isProfessor) {
       endpoint = "professorChatRule";
     }
-    if (!userData || !userData.isProfessor) {
+
+    if (!userData.isProfessor) {
       // Retrieve messages that have isProfessor set to true
       const exerciseDocRef = doc(
         getFirestore(),
@@ -50,46 +74,64 @@ const determineEndpoint = async () => {
         collection(exerciseDocRef, "messages"),
         where("isProfessor", "==", true)
       );
-
       const messagesQuerySnapshot = await getDocs(messagesQuery);
 
       messages = []; // Clear previous messages
 
       messagesQuerySnapshot.forEach((doc) => {
-        messages.push(doc.data().message.content);
+        messages.push(doc.data().message);
       });
+      console.log(messages);
     }
   }
 };
 
 // Check counts and set flags
 async function checkCountsAndFlags() {
+  await initializeCountsFromFirestore();
   if (
     studentsJoinedCount > 0 &&
     studentSubmitCount > 0 &&
     studentsJoinedCount === studentSubmitCount
   ) {
-    allStudentsSubmit = true;
     endpoint = "professorReportChatRule"; // Change endpoint
     console.log("All students have submitted. Endpoint changed.");
 
-    // Fetch messages based on criteria when allStudentsSubmit is true
     const exerciseDocRef = doc(
       getFirestore(),
       "exercises",
       ActiveExerciseDocId
     );
-    const messagesQuery = query(
+
+    // Fetch messages where isProfessor is true and role is user
+    const professorUserMessagesQuery = query(
+      collection(exerciseDocRef, "messages"),
+      where("isProfessor", "==", true)
+    );
+    const professorUserMessagesQuerySnapshot = await getDocs(
+      professorUserMessagesQuery
+    );
+
+    // Fetch messages where isProfessor is false and role is assistant
+    const nonProfessorAssistantMessagesQuery = query(
       collection(exerciseDocRef, "messages"),
       where("isProfessor", "==", false),
       where("message.role", "==", "assistant")
     );
-    const messagesQuerySnapshot = await getDocs(messagesQuery);
+    const nonProfessorAssistantMessagesQuerySnapshot = await getDocs(
+      nonProfessorAssistantMessagesQuery
+    );
 
-    messages = []; // Clear previous messages
-    messagesQuerySnapshot.forEach((doc) => {
-      messages.push(doc.data().message.content);
+    // Combine the messages from both queries
+    messages = [];
+    professorUserMessagesQuerySnapshot.forEach((doc) => {
+      messages.push(doc.data().message);
     });
+    nonProfessorAssistantMessagesQuerySnapshot.forEach((doc) => {
+      messages.push(doc.data().message);
+    });
+
+    console.log(messages);
   }
 }
 
@@ -141,7 +183,6 @@ async function createNewExercise() {
       reportInfo: {
         studentsJoinedCount: 0, // Initialize studentsJoinedCount to 0
         studentSubmitCount: 0, // Initialize studentSubmitCount to 0
-        allStudentsSubmit: false, // Initialize allStudentsSubmit to false
       },
     });
 
@@ -213,6 +254,16 @@ chatForm.addEventListener("submit", async (e) => {
   try {
     const user = auth.currentUser; // Get the current user
     await determineEndpoint(); // Call the function to determine the endpoint
+    console.log(auth.currentUser);
+
+    if (!user) {
+      console.error("User not authenticated");
+      return;
+    }
+
+    const userDocRef = doc(getFirestore(), "users", user.uid);
+    const userDocSnapshot = await getDoc(userDocRef);
+    const userData = userDocSnapshot.data();
 
     const userMessage = formInput.value;
     const newUserMessage = { role: "user", content: `${userMessage}` };
@@ -224,7 +275,7 @@ chatForm.addEventListener("submit", async (e) => {
     }
 
     // Increment studentSubmitCount if user is a student
-    if (user && !user.isProfessor) {
+    if (user && !userData.isProfessor) {
       studentSubmitCount++;
       await updateStudentSubmitCount(); // Update Firestore count
     }
@@ -235,26 +286,44 @@ chatForm.addEventListener("submit", async (e) => {
         ActiveExerciseDocId,
         newUserMessage,
         user?.uid,
-        user.isProfessor
+        userData.isProfessor
       );
     } else {
       console.error("Active exercise document ID not found after creation");
       throw new Error("Failed to create or retrieve ActiveExerciseDocId");
     }
 
-    // Check counts and set flags
-    await checkCountsAndFlags();
-
     formInput.value = "";
 
     // Create a new paragraph element for the user's input
     const userMessageElement = document.createElement("div");
     userMessageElement.classList.add("user-message"); // Add a class for styling
-    userMessageElement.innerHTML = `
+
+    // Create username element
+    const usernameElement = document.createElement("div");
+    usernameElement.classList.add("message-username");
+    usernameElement.textContent = user.displayName || "Username"; // Use user's display name if available, else use "Username"
+
+    // Create message content element
+    const messageContentElement = document.createElement("div");
+    messageContentElement.classList.add("message-content");
+    messageContentElement.innerHTML = `
     <div class="message__text">${userMessage}</div>`;
+
+    // Append profile picture, username, and message content to message details
+    userMessageElement.appendChild(usernameElement);
+    userMessageElement.appendChild(messageContentElement);
     messagesContainer.appendChild(userMessageElement);
 
+    // Scroll to the bottom of the messages container
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    //console.log(messages);
+
+    // Run checkCountsAndFlags only if the user is a professor
+    if (user && userData.isProfessor) {
+      await checkCountsAndFlags();
+    }
 
     const res = await fetch(
       `http://127.0.0.1:5001/thesis-77e2b/us-central1/${endpoint}`,
@@ -282,7 +351,7 @@ chatForm.addEventListener("submit", async (e) => {
         ActiveExerciseDocId,
         newAssistantMessage,
         user?.uid,
-        user.isProfessor
+        userData.isProfessor
       );
     } else {
       console.error("Active exercise document ID not found");
@@ -292,9 +361,22 @@ chatForm.addEventListener("submit", async (e) => {
 
     // Create a new div element for the message
     const assistantMessageElement = document.createElement("div");
-    assistantMessageElement.classList.add("user-message");
-    assistantMessageElement.innerHTML = `
+    assistantMessageElement.classList.add("user-message"); // Add a class for styling
+
+    // Create username element
+    const assistantNameElement = document.createElement("div");
+    assistantNameElement.classList.add("message-username");
+    assistantNameElement.textContent = "Assistant"; // Set the username as "Assistant"
+
+    // Create message content element
+    const assistantMessageContentElement = document.createElement("div");
+    assistantMessageContentElement.classList.add("message-content");
+    assistantMessageContentElement.innerHTML = `
     <div class="message__text">${assistantMessage}</div>`;
+
+    // Append profile picture, username, and message content to message details
+    assistantMessageElement.appendChild(assistantNameElement);
+    assistantMessageElement.appendChild(assistantMessageContentElement);
     messagesContainer.appendChild(assistantMessageElement);
 
     // Scroll to the bottom of the messages container
@@ -315,7 +397,7 @@ async function updateStudentSubmitCount() {
       ActiveExerciseDocId
     );
     await updateDoc(exerciseDocRef, {
-      studentSubmitCount: studentSubmitCount,
+      "reportInfo.studentSubmitCount": studentSubmitCount,
     });
     console.log("studentSubmitCount updated successfully");
   } catch (error) {

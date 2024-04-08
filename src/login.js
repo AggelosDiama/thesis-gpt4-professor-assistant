@@ -1,5 +1,5 @@
 import { auth } from "./config/firebaseConfig.js";
-import { signInWithEmailAndPassword } from "@firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 
 const loginForm = document.querySelector(".login");

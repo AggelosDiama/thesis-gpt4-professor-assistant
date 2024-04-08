@@ -1,6 +1,13 @@
 import { auth } from "./config/firebaseConfig.js";
 import { onAuthStateChanged } from "@firebase/auth";
-import { collection, getFirestore, getDocs } from "firebase/firestore";
+import {
+  collection,
+  getFirestore,
+  getDocs,
+  updateDoc,
+  doc,
+  increment,
+} from "firebase/firestore";
 
 // Global variable to store the ID of the active exercise document
 let ActiveExerciseDocId;
@@ -54,7 +61,7 @@ async function joinExercise(exerciseId) {
   try {
     const exerciseDocRef = doc(getFirestore(), "exercises", exerciseId);
     await updateDoc(exerciseDocRef, {
-      studentsJoinedCount: increment(1),
+      "reportInfo.studentsJoinedCount": increment(1),
     });
     console.log("studentsJoinedCount incremented successfully");
   } catch (error) {
@@ -63,19 +70,24 @@ async function joinExercise(exerciseId) {
 }
 
 // Event listener function to select an exercise
-function selectExercise(event) {
-  // Get the ID of the selected exercise
-  const exerciseId = event.currentTarget.getAttribute("doc-id");
+async function selectExercise(event) {
+  try {
+    // Get the ID of the selected exercise
+    const exerciseId = event.currentTarget.getAttribute("doc-id");
 
-  // Update the ActiveExerciseDocId
-  ActiveExerciseDocId = exerciseId;
+    // Increment studentsJoinedCount
+    await joinExercise(exerciseId);
 
-  // Update the localStorage
-  localStorage.setItem("ActiveExerciseDocId", ActiveExerciseDocId);
+    // Update the ActiveExerciseDocId
+    ActiveExerciseDocId = exerciseId;
 
-  // Increment studentsJoinedCount
-  joinExercise(exerciseId);
+    // Update the localStorage
+    localStorage.setItem("ActiveExerciseDocId", ActiveExerciseDocId);
 
-  // Redirect to the main.html page
-  window.location.href = "main.html";
+    // Redirect to the main.html page
+    window.location.href = "main.html";
+  } catch (error) {
+    console.error("Error selecting exercise:", error);
+    // Handle error if necessary
+  }
 }

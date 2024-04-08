@@ -4,16 +4,37 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="./styling/login.css" />
+    <style>
+      /* Additional styles for the logout button */
+      .logout-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 200px;
+      }
+      #logoutButton .icon {
+        display: inline-block;
+        width: 20px; /* Adjust icon width as needed */
+        height: 20px; /* Adjust icon height as needed */
+        background-image: url("../images/logout.png");
+        background-size: cover;
+        margin-right: 8px; /* Add margin between icon and text */
+        vertical-align: middle;
+      }
+    </style>
     <title>Join Page</title>
   </head>
   <body>
     <div class="exercise-box">
       <div class="exercise-list">
         <h1>Join Exercise</h1>
-
-        <!-- Add more list items as needed -->
+        <!-- Add logout button here -->
+        <button class="main-btn logout-btn" id="logoutButton">
+          <span class="icon"></span>Logout
+        </button>
       </div>
     </div>
     <script src="./join.bundle.js" defer></script>
+    <script src="./main.bundle.js" defer></script>
   </body>
 </html>
