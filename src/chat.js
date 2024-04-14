@@ -206,13 +206,57 @@ async function createNewExercise() {
     // Update the UI with the new exercise
     const exerciseList = document.querySelector(".exercise-list ul");
     const exerciseItem = document.createElement("li");
-    exerciseItem.textContent = `${exerciseTitle} - ${exerciseDate}`;
+    exerciseItem.textContent = `${exerciseTitle}`;
     exerciseItem.setAttribute("doc-id", ActiveExerciseDocId); // Add the ID attribute
     exerciseList.appendChild(exerciseItem);
   } catch (error) {
     console.error("Error creating new exercise:", error);
   }
 }
+
+let defaultMessage;
+
+// Function to display initial message to the user
+async function defaultMessageUI() {
+  try {
+    const user = auth.currentUser; // Get the current user
+    if (!user) {
+      console.error("User not authenticated");
+      return;
+    }
+
+    const userDocRef = doc(getFirestore(), "users", user.uid);
+    const userDocSnapshot = await getDoc(userDocRef);
+    const userData = userDocSnapshot.data();
+
+    const messagesContainer = document.querySelector(".messages");
+    // Check if the messages container is empty
+    if (!messagesContainer.innerHTML.trim()) {
+      const defaultMessageElement = document.createElement("div");
+      defaultMessageElement.classList.add("default-message");
+
+      let defaultMessage = "";
+      if (userData.isProfessor) {
+        defaultMessage =
+          "Begin a new exercise by typing below or select from the existing exercises on the left.";
+      } else {
+        defaultMessage =
+          "Read the instruction on the left before you submit your solution.";
+      }
+
+      defaultMessageElement.textContent = defaultMessage;
+
+      messagesContainer.appendChild(defaultMessageElement);
+    }
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+  }
+}
+
+// Call the function to display the default message with a delay when the file loads
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(defaultMessageUI, 2000); // Delay of 500 milliseconds to load the user first
+});
 
 // Retrieve messages from Firestore
 if (ActiveExerciseDocId) {
@@ -293,6 +337,12 @@ chatForm.addEventListener("submit", async (e) => {
       throw new Error("Failed to create or retrieve ActiveExerciseDocId");
     }
 
+    // Empty the default message
+    const messagesContainer = document.querySelector(".messages");
+    while (messagesContainer.firstChild) {
+      messagesContainer.removeChild(messagesContainer.firstChild);
+    }
+
     formInput.value = "";
 
     // Create a new paragraph element for the user's input
@@ -308,7 +358,7 @@ chatForm.addEventListener("submit", async (e) => {
     const messageContentElement = document.createElement("div");
     messageContentElement.classList.add("message-content");
     messageContentElement.innerHTML = `
-    <div class="message__text">${userMessage}</div>`;
+    <div class="message__text"><pre>${userMessage}</pre></div>`;
 
     // Append profile picture, username, and message content to message details
     userMessageElement.appendChild(usernameElement);
@@ -372,7 +422,7 @@ chatForm.addEventListener("submit", async (e) => {
     const assistantMessageContentElement = document.createElement("div");
     assistantMessageContentElement.classList.add("message-content");
     assistantMessageContentElement.innerHTML = `
-    <div class="message__text">${assistantMessage}</div>`;
+    <div class="message__text"><pre>${assistantMessage}</pre></div>`;
 
     // Append profile picture, username, and message content to message details
     assistantMessageElement.appendChild(assistantNameElement);
@@ -381,6 +431,15 @@ chatForm.addEventListener("submit", async (e) => {
 
     // Scroll to the bottom of the messages container
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    const submitButton = document.querySelector(".main-btn");
+    // Disable textarea and change placeholder text if user is not a professor
+    if (!userData.isProfessor) {
+      formInput.disabled = true;
+      formInput.placeholder =
+        "You can't send more messages, please refer to your professor for questions";
+      submitButton.disabled = true;
+    }
 
     chatForm.reset();
   } catch (error) {

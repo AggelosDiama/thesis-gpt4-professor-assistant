@@ -42,7 +42,16 @@ registerForm.addEventListener("submit", async (e) => {
     });
 
     console.log("User created:", user);
-    // Reset the registration form after successful user creation and document update
+
+    // Redirect to appropriate page based on the role
+    if (userData.isProfessor) {
+      // Professor is logging in
+      window.location.href = "./main.html";
+    } else {
+      // Student is logging in
+      window.location.href = "./join-exe.html";
+    }
+
     registerForm.reset();
   } catch (err) {
     console.log("Error creating user:", err.message);

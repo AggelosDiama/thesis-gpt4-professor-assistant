@@ -13,6 +13,7 @@ import {
   where,
   updateDoc,
   increment,
+  onSnapshot,
 } from "firebase/firestore";
 
 // Function to toggle the dropdown menu
@@ -73,7 +74,7 @@ async function createNewExercise(title, date, visibility) {
   // Update the UI with the new exercise
   const exerciseList = document.querySelector(".exercise-list ul");
   const ExerciseItem = document.createElement("li");
-  ExerciseItem.textContent = `${title} - ${date}`;
+  ExerciseItem.textContent = `${title}`;
   ExerciseItem.setAttribute("doc-id", ActiveExerciseDocId); // Add the ID attribute
   ExerciseItem.addEventListener("click", selectExercise); // Add event listener
   exerciseList.appendChild(ExerciseItem);
@@ -81,6 +82,38 @@ async function createNewExercise(title, date, visibility) {
   messages = [];
   const messagesContainer = document.querySelector(".messages");
   messagesContainer.innerHTML = ""; // Clear all messages from the container
+}
+
+// Function to update UI with student submission count
+function updateSubmissionCountUI(studentSubmitCount, studentsJoinedCount) {
+  const submissionCountElement = document.querySelector(".submission-count");
+  submissionCountElement.textContent = `# of students submitted ${studentSubmitCount}/${studentsJoinedCount}`;
+}
+
+// Function to listen for changes to exercise document in Firestore
+function listenForExerciseChanges(exerciseId) {
+  const exerciseDocRef = doc(getFirestore(), "exercises", exerciseId);
+
+  // Listen for changes to the exercise document
+  const unsubscribe = onSnapshot(exerciseDocRef, (doc) => {
+    if (doc.exists()) {
+      const exerciseData = doc.data();
+      const { studentSubmitCount, studentsJoinedCount } =
+        exerciseData.reportInfo;
+
+      // Update UI with the latest submission count
+      updateSubmissionCountUI(studentSubmitCount, studentsJoinedCount);
+    } else {
+      console.log("Exercise document does not exist");
+    }
+  });
+}
+
+// Function to create X/Y display
+function createSubmissionCountUI() {
+  const submissionCountElement = document.createElement("div");
+  submissionCountElement.classList.add("submission-count");
+  return submissionCountElement;
 }
 
 // Function to handle exercise selection
@@ -97,14 +130,91 @@ function selectExercise(event) {
   // Remove active class from all exercise list items
   const exerciseListItems = document.querySelectorAll(".exercise-list ul li");
   exerciseListItems.forEach((item) => {
+    item.addEventListener("click", selectExercise);
+  });
+  exerciseListItems.forEach((item) => {
     item.classList.remove("active");
+
+    // Remove the visibility checkbox from all items
+    const visibilityContainer = item.querySelector(".list-visibility");
+    if (visibilityContainer) {
+      visibilityContainer.remove();
+    }
+
+    // Remove X/Y display from all items
+    const submissionCountElement = item.querySelector(".submission-count");
+    if (submissionCountElement) {
+      submissionCountElement.remove();
+    }
   });
 
   // Add active class to the clicked exercise list item
   event.currentTarget.classList.add("active");
+  // Remove the event listener from all items
+  event.currentTarget.removeEventListener("click", selectExercise);
 
-  // Retrieve messages for the selected exercise
-  retrieveMessages();
+  // Call the asynchronous function to handle visibility checkbox creation and Firestore update
+  handleVisibilityCheckbox(exerciseId, event.currentTarget);
+
+  // Create X/Y display and append it to the selected exercise item
+  const submissionCountUI = createSubmissionCountUI();
+  event.currentTarget.appendChild(submissionCountUI);
+
+  // Listen for changes to the exercise document in Firestore
+  listenForExerciseChanges(exerciseId);
+}
+
+// Async function to handle visibility checkbox creation and Firestore update
+async function handleVisibilityCheckbox(exerciseId, targetElement) {
+  try {
+    // Fetch the exercise document from Firestore
+    const exerciseDocRef = doc(getFirestore(), "exercises", exerciseId);
+    const exerciseDocSnapshot = await getDoc(exerciseDocRef);
+    const exerciseData = exerciseDocSnapshot.data();
+
+    // Create a div to wrap the label and checkbox
+    const visibilityContainer = document.createElement("div");
+    visibilityContainer.classList.add("list-visibility");
+
+    // Create visibility label
+    const visibilityLabel = document.createElement("span");
+    visibilityLabel.textContent = "Visibility to all students: ";
+
+    // Create visibility checkbox
+    const visibilityCheckbox = document.createElement("input");
+    visibilityCheckbox.type = "checkbox";
+    visibilityCheckbox.name = "visibility";
+    visibilityCheckbox.checked = exerciseData.visibility;
+
+    // Add change event listener to update visibility in Firestore
+    visibilityCheckbox.addEventListener("change", async () => {
+      try {
+        // Update visibility in Firestore
+        await updateDoc(exerciseDocRef, {
+          visibility: visibilityCheckbox.checked,
+        });
+
+        console.log(
+          "Visibility updated in Firestore:",
+          visibilityCheckbox.checked
+        );
+      } catch (error) {
+        console.error("Error updating visibility in Firestore:", error);
+      }
+    });
+
+    // Append visibility label and checkbox to the container div
+    visibilityContainer.appendChild(visibilityLabel);
+    visibilityContainer.appendChild(visibilityCheckbox);
+
+    // Append the container div to the selected exercise item
+    targetElement.appendChild(visibilityContainer);
+
+    // Retrieve messages for the selected exercise
+    retrieveMessages();
+  } catch (error) {
+    console.error("Error handling visibility checkbox:", error);
+  }
 }
 
 // Retrieve messages from Firestore for the selected exercise and current user
@@ -171,7 +281,8 @@ function updateMessagesUI() {
       // Create message content element
       const messageContentElement = document.createElement("div");
       messageContentElement.classList.add("message-content");
-      messageContentElement.textContent = msg.content;
+      messageContentElement.innerHTML = `
+    <div class="message__text"><pre>${msg.content}</pre></div>`;
 
       // Create username element based on role
       const usernameElement = document.createElement("div");
@@ -293,13 +404,8 @@ onAuthStateChanged(auth, async (user) => {
       const userSettings = document.querySelector(".user-settings");
       userSettings.parentNode.insertBefore(newExerciseButton, userSettings);
 
-      // let defaultMessage;
-
       // Check if the user is a professor
       if (userData.isProfessor) {
-        // defaultMessage =
-        //   "Begin a new exercise by typing below or select from the existing exercises on the left.";
-
         // Update the chat history with exercises from Firestore
         const exerciseList = document.querySelector(".exercise-list ul");
         exerciseList.textContent = " ";
@@ -311,7 +417,7 @@ onAuthStateChanged(auth, async (user) => {
           //console.log(exercise);
 
           const ExerciseItem = document.createElement("li");
-          ExerciseItem.textContent = `${exercise.title} - ${exercise.date}`;
+          ExerciseItem.textContent = `${exercise.title}`;
 
           ExerciseItem.setAttribute("doc-id", doc.id);
           ExerciseItem.addEventListener("click", selectExercise); // Add event listener
@@ -323,9 +429,6 @@ onAuthStateChanged(auth, async (user) => {
         document.querySelector(".exercise-list p b").textContent =
           "Exercises History";
       } else {
-        // defaultMessage =
-        //   "Read the instruction on the left before you submit your solution.";
-
         // Set the title for the exercise instructions
         document.querySelector(".exercise-list p b").textContent =
           "Exercise Instructions";
@@ -361,11 +464,6 @@ onAuthStateChanged(auth, async (user) => {
         // Insert the div before the divider
         divider.parentNode.insertBefore(activeExerciseDiv, divider);
       }
-
-      // const defaultMessageElement = document.createElement("div");
-      // defaultMessageElement.classList.add("default-message");
-      // defaultMessageElement.textContent = defaultMessage;
-      // messagesContainer.appendChild(defaultMessageElement);
     } catch (error) {
       console.error("Error:", error);
     }
@@ -424,7 +522,7 @@ document
 // Function to adjust textarea height
 function adjustTextareaHeight() {
   const textarea = document.getElementById("chat-input");
-  //textarea.style.height = "auto"; // Reset height to auto
+  textarea.style.height = "auto"; // Reset height to auto
   textarea.style.height = textarea.scrollHeight + 2 + "px"; // Set height based on content
 }
 
