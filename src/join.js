@@ -7,6 +7,8 @@ import {
   updateDoc,
   doc,
   increment,
+  query,
+  where,
 } from "firebase/firestore";
 
 // Global variable to store the ID of the active exercise document
@@ -17,7 +19,8 @@ onAuthStateChanged(auth, async (user) => {
     try {
       // Update the chat history with exercises from Firestore
       const exercisesRef = collection(getFirestore(), "exercises");
-      const querySnapshot = await getDocs(exercisesRef);
+      const myquery = query(exercisesRef, where("visibility", "==", true)); // Construct the query
+      const querySnapshot = await getDocs(myquery); // Execute the query
       querySnapshot.forEach((doc) => {
         const exercise = doc.data();
         //console.log(doc.id);

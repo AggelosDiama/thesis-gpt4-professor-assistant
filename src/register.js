@@ -1,6 +1,6 @@
 import { app, auth } from "./config/firebaseConfig.js";
 import { createUserWithEmailAndPassword, updateProfile } from "@firebase/auth";
-import { getFirestore, collection, doc, setDoc } from "@firebase/firestore";
+import { getFirestore, doc, setDoc } from "@firebase/firestore";
 
 const db = getFirestore(app);
 
@@ -42,15 +42,7 @@ registerForm.addEventListener("submit", async (e) => {
     });
 
     console.log("User created:", user);
-
-    // Redirect to appropriate page based on the role
-    if (userData.isProfessor) {
-      // Professor is logging in
-      window.location.href = "./main.html";
-    } else {
-      // Student is logging in
-      window.location.href = "./join-exe.html";
-    }
+    window.location.href = "./join-exe.html"; // user by default is a student
 
     registerForm.reset();
   } catch (err) {

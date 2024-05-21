@@ -5,11 +5,12 @@ export const professorChatRule = onRequest(async (req, res) => {
   const { messages } = req.body;
 
   const description = await openai.chat.completions.create({
-    model: "gpt-4", //3.5 for FE testing, change later to 4
+    //model: "gpt-3.5-turbo" //uncomment for FE testing
+    model: "gpt-4", //default
     messages: [
       {
         role: "system",
-        content: `You are an expert university professor with specialty on computer language programming.Give the response in html format, with <p> elements and <br> and other text decorations.`,
+        content: `You are an expert greek university professor with specialty on computer language programming.`,
       },
       ...messages,
     ],
@@ -23,7 +24,8 @@ export const professorReportChatRule = onRequest(async (req, res) => {
   const { messages } = req.body;
 
   const description = await openai.chat.completions.create({
-    model: "gpt-4", //3.5 for FE testing, change later to 4
+    //model: "gpt-3.5-turbo" //uncomment for FE testing
+    model: "gpt-4", //default
     messages: [
       {
         role: "system",
@@ -31,11 +33,11 @@ export const professorReportChatRule = onRequest(async (req, res) => {
       },
       {
         role: "user",
-        content: `According to the following messages, can you sum up the feedback that the students got for their code solutions. According to the following messages, get the code exercise, the evalaution criteria and finally my solution to the code and give me feedback for improvements and mistakes and grade me from 1 to 10 according to the criteria. Give the response in html format, with <p> elements and <br> and other text decorations.`,
+        content: `According to the following messages, can you sum up the feedback that the students got for their code solutions and give me their grades with their mean value as well.`,
       },
       ...messages,
     ],
-    max_tokens: 2000,
+    max_tokens: 1000,
   });
 
   res.status(200).send(description.choices[0].message.content);
@@ -45,19 +47,20 @@ export const studentChatRule = onRequest(async (req, res) => {
   const { messages } = req.body;
 
   const description = await openai.chat.completions.create({
-    model: "gpt-4", //3.5 for FE testing, change later to 4
+    //model: "gpt-3.5-turbo" //uncomment for FE testing
+    model: "gpt-4", //default
     messages: [
       {
         role: "system",
-        content: `You are an expert university professor with specialty on computer language programming. Provide feedback to the university student on their programming language exercises.`,
+        content: `You are an expert greek university professor with specialty on computer language programming. Provide feedback to the university student on their programming language exercises.`,
       },
       {
         role: "user",
-        content: `According to the following messages, get the code exercise, the evalaution criteria and finally my solution to the code and give me feedback for improvements and mistakes and grade me from 1 to 10 according to the criteria. Give the response in html format, with <p> elements and <br> and other text decorations.`,
+        content: `According to the following messages, get the code exercise, the evalaution criteria and finally my solution to the code and give me feedback for improvements and mistakes and grade me from 1 to 10 according to the criteria.`,
       },
       ...messages,
     ],
-    max_tokens: 1000,
+    max_tokens: 1500,
   });
 
   res.status(200).send(description.choices[0].message.content);

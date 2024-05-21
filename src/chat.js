@@ -40,14 +40,12 @@ async function initializeCountsFromFirestore() {
     if (exerciseData) {
       studentsJoinedCount = exerciseData.reportInfo.studentsJoinedCount || 0;
       studentSubmitCount = exerciseData.reportInfo.studentSubmitCount || 0;
+      console.log(studentSubmitCount, studentsJoinedCount);
     }
   } catch (error) {
     console.error("Error initializing counts from Firestore:", error);
   }
 }
-
-// Call the function to initialize counts from Firestore
-// initializeCountsFromFirestore();
 
 // Check if the user is a professor
 let endpoint = "studentChatRule"; // Default endpoint
@@ -106,7 +104,8 @@ async function checkCountsAndFlags() {
     // Fetch messages where isProfessor is true and role is user
     const professorUserMessagesQuery = query(
       collection(exerciseDocRef, "messages"),
-      where("isProfessor", "==", true)
+      where("isProfessor", "==", true),
+      where("message.role", "==", "user")
     );
     const professorUserMessagesQuerySnapshot = await getDocs(
       professorUserMessagesQuery
@@ -256,26 +255,8 @@ async function defaultMessageUI() {
 // Call the function to display the default message with a delay when the file loads
 document.addEventListener("DOMContentLoaded", () => {
   setTimeout(defaultMessageUI, 2000); // Delay of 500 milliseconds to load the user first
+  initializeCountsFromFirestore();
 });
-
-// Retrieve messages from Firestore
-if (ActiveExerciseDocId) {
-  const exerciseDocRef = doc(getFirestore(), "exercises", ActiveExerciseDocId);
-  const messagesQuerySnapshot = await getDocs(
-    collection(exerciseDocRef, "messages")
-  );
-
-  // Loop through the messages and extract the "message" field
-  messagesQuerySnapshot.forEach((doc) => {
-    messages.push(doc.data().message);
-    //console.log(doc.data().message);
-  });
-  // Sort messages based on timestamp before rendering
-  messages.sort((a, b) => a.timestamp - b.timestamp);
-  console.log(messages);
-} else {
-  console.error("Active exercise document ID not found");
-}
 
 // Function to handle storage event
 function handleStorageEvent(event) {
@@ -285,7 +266,6 @@ function handleStorageEvent(event) {
       "ActiveExerciseDocId updated from localStorage:",
       ActiveExerciseDocId
     );
-    // Now you can perform any additional actions or updates based on the new value
   }
 }
 
@@ -298,7 +278,7 @@ chatForm.addEventListener("submit", async (e) => {
   try {
     const user = auth.currentUser; // Get the current user
     await determineEndpoint(); // Call the function to determine the endpoint
-    console.log(auth.currentUser);
+    //console.log(auth.currentUser);
 
     if (!user) {
       console.error("User not authenticated");
@@ -318,9 +298,10 @@ chatForm.addEventListener("submit", async (e) => {
       await createNewExercise();
     }
 
-    // Increment studentSubmitCount if user is a student
     if (user && !userData.isProfessor) {
+      console.log("Before increment:", studentSubmitCount);
       studentSubmitCount++;
+      console.log("After increment:", studentSubmitCount);
       await updateStudentSubmitCount(); // Update Firestore count
     }
 
@@ -337,10 +318,10 @@ chatForm.addEventListener("submit", async (e) => {
       throw new Error("Failed to create or retrieve ActiveExerciseDocId");
     }
 
-    // Empty the default message
-    const messagesContainer = document.querySelector(".messages");
-    while (messagesContainer.firstChild) {
-      messagesContainer.removeChild(messagesContainer.firstChild);
+    // Remove the default message if it exists
+    const defaultMessageElement = document.querySelector(".default-message");
+    if (defaultMessageElement) {
+      defaultMessageElement.remove();
     }
 
     formInput.value = "";
@@ -367,8 +348,6 @@ chatForm.addEventListener("submit", async (e) => {
 
     // Scroll to the bottom of the messages container
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-    //console.log(messages);
 
     // Run checkCountsAndFlags only if the user is a professor
     if (user && userData.isProfessor) {

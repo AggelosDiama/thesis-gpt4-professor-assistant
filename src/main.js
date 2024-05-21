@@ -23,7 +23,7 @@ window.toggleDropdown = function () {
 };
 
 // Global variable to store the ID of the active exercise document
-//localStorage.clear();
+
 let ActiveExerciseDocId = localStorage.getItem("ActiveExerciseDocId");
 
 // Initialize an empty array to store messages from Firestore
