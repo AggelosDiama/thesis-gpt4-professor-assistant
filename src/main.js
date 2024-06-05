@@ -87,7 +87,7 @@ async function createNewExercise(title, date, visibility) {
 // Function to update UI with student submission count
 function updateSubmissionCountUI(studentSubmitCount, studentsJoinedCount) {
   const submissionCountElement = document.querySelector(".submission-count");
-  submissionCountElement.textContent = `# of students submitted ${studentSubmitCount}/${studentsJoinedCount}`;
+  submissionCountElement.innerHTML = `Number of students submitted: <b>${studentSubmitCount} / ${studentsJoinedCount}</b>`;
 }
 
 // Function to listen for changes to exercise document in Firestore
@@ -178,7 +178,7 @@ async function handleVisibilityCheckbox(exerciseId, targetElement) {
 
     // Create visibility label
     const visibilityLabel = document.createElement("span");
-    visibilityLabel.textContent = "Visibility to all students: ";
+    visibilityLabel.textContent = "Exercise visible to students: ";
 
     // Create visibility checkbox
     const visibilityCheckbox = document.createElement("input");
@@ -230,10 +230,10 @@ async function retrieveMessages() {
     const userDocSnapshot = await getDoc(userDocRef);
     const userData = userDocSnapshot.data();
 
-    if (!userData || !userData.isProfessor) {
-      console.error("User is not a professor");
-      return;
-    }
+    // if (!userData || !userData.isProfessor) {
+    //   console.error("User is not a professor");
+    //   return;
+    // }
 
     if (ActiveExerciseDocId) {
       const exerciseDocRef = doc(
@@ -366,10 +366,24 @@ function createUserButton(user) {
 // Check authentication state on page load
 window.addEventListener("DOMContentLoaded", () => {
   // Add an authentication state observer
-  auth.onAuthStateChanged((user) => {
+  auth.onAuthStateChanged(async (user) => {
     if (!user) {
       // User is not signed in, redirect to login page
       window.location.href = "/index.html"; // Redirect to your login page
+      return; // Ensure the rest of the code doesn't execute
+    }
+
+    try {
+      // Ensure that the Firestore methods are called only when a user is authenticated
+      const userDocRef = doc(getFirestore(), "users", user.uid);
+      const userDataSnapshot = await getDoc(userDocRef);
+      const userData = userDataSnapshot.data();
+
+      if (!userData.isProfessor) {
+        retrieveMessages();
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
     }
   });
 });
@@ -435,8 +449,23 @@ onAuthStateChanged(auth, async (user) => {
 
         // Create a paragraph with instructions
         const instructionsParagraph = document.createElement("p");
-        instructionsParagraph.innerHTML =
-          "<b> --- READ HERE FIRST --- </b>These are the instructions for the lab exercise. Please copy paste in the chat prompt your code solution and press send. You will recieve a response with detailed feedback for your solution and with a respective grade (out of 10) which is not final.    <b>DISCLAIMER</b>: At this version the file upload feature is not available!";
+        instructionsParagraph.innerHTML = `<pre><b> ____ READ HERE FIRST ____ </b>
+
+Please <b>copy and paste</b> in 
+the chat prompt your code 
+solution and <b>press send</b>. 
+You will receive a response 
+with <b>detailed feedback</b> 
+for your solution and 
+with a respective grade 
+which is <b>not final</b>.
+
+<b>DISCLAIMERS</b>: You can only 
+send <b>one response</b>, so 
+contact your professor 
+in case the message is 
+not <b>understandable</b>
+or <b>wrong</b>!</pre>`;
         instructionsParagraph.classList.add("instruction-paragraph"); // Add class to the paragraph
 
         // Append the paragraph to the exercise list
@@ -456,7 +485,7 @@ onAuthStateChanged(auth, async (user) => {
         // Create a div for the active exercise name
         const activeExerciseDiv = document.createElement("div");
         activeExerciseDiv.classList.add(".exercise-list");
-        activeExerciseDiv.textContent = `${exerciseData.title} - ${exerciseData.date}`;
+        activeExerciseDiv.textContent = `${exerciseData.title}: ${exerciseData.date}`;
 
         // Get the divider
         const divider = document.querySelector(".divider");

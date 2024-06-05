@@ -30,7 +30,9 @@
           <div class="divider"></div>
           <div class="user-settings">
             <div class="secondary-btn dropdown" onclick="toggleDropdown()">
+              <img id="account" src="images/account.png" alt="account" />
               <a href="index.html" class="username" id="usernameLink">...</a>
+              <img id="more" src="images/more.png" alt="more" />
               <div class="dropdown-content">
                 <button class="secondary-btn logout" id="settingsButton">
                   <span class="icon"></span>Settings
@@ -59,8 +61,8 @@
             <button class="main-btn" type="submit">Send</button>
           </form>
           <p>
-            The system can make mistakes. Confirm with your professor for
-            possible questions on your code
+            The system can make mistakes. Check relevant information outside of
+            the application to cross-reference the responses.
           </p>
         </div>
       </div>
@@ -77,10 +79,18 @@
           <input type="text" id="exercise-title" required />
           <br />
           <label for="exercise-date">Date:</label>
-          <input type="date" id="exercise-date" required />
+          <input
+            type="date"
+            id="exercise-date"
+            placeholder="dd-mm-yyyy"
+            value=""
+            min="2010-01-01"
+            max="2030-12-31"
+            required
+          />
           <br />
           <label for="visibility">
-            <i class="info-icon">ℹ️</i> Visibility:
+            <i class="info-icon">ℹ️</i> Exercise visible to students:
           </label>
           <input type="checkbox" id="visibility" checked />
           <br />

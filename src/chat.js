@@ -173,7 +173,7 @@ async function createNewExercise() {
 
     const exerciseTitle = `Exercise ${exerciseNumber}`;
     const exerciseDate = currentDate;
-    const visibility = true; // Set visibility as needed
+    const visibility = false; // Set visibility to false to avoid mistakes visible to students
 
     const newExerciseDoc = await addDoc(exercisesRef, {
       title: exerciseTitle,
@@ -236,14 +236,12 @@ async function defaultMessageUI() {
 
       let defaultMessage = "";
       if (userData.isProfessor) {
-        defaultMessage =
-          "Begin a new exercise by typing below or select from the existing exercises on the left.";
+        defaultMessage = `Begin a new exercise by <span style="color: #873236;">typing below</span> or select from the <span style="color: #873236;">existing exercises</span> on the left.`;
       } else {
-        defaultMessage =
-          "Read the instruction on the left before you submit your solution.";
+        defaultMessage = `<span style="color: #873236;">Read the instructions</span> on the left before you submit your solution.`;
       }
 
-      defaultMessageElement.textContent = defaultMessage;
+      defaultMessageElement.innerHTML = defaultMessage;
 
       messagesContainer.appendChild(defaultMessageElement);
     }
@@ -346,6 +344,26 @@ chatForm.addEventListener("submit", async (e) => {
     userMessageElement.appendChild(messageContentElement);
     messagesContainer.appendChild(userMessageElement);
 
+    // Create a new div element for the message
+    const assistantMessageElement = document.createElement("div");
+    assistantMessageElement.classList.add("user-message"); // Add a class for styling
+
+    // Create username element
+    const assistantNameElement = document.createElement("div");
+    assistantNameElement.classList.add("message-username");
+    assistantNameElement.textContent = "Assistant"; // Set the username as "Assistant"
+
+    // Create message content element
+    const assistantMessageContentElement = document.createElement("div");
+    assistantMessageContentElement.classList.add("message-content");
+    assistantMessageContentElement.innerHTML = `
+    <div class="message__text"><pre>Περίμενε για την απάντηση...</pre></div>`;
+
+    // Append profile picture, username, and message content to message details
+    assistantMessageElement.appendChild(assistantNameElement);
+    assistantMessageElement.appendChild(assistantMessageContentElement);
+    messagesContainer.appendChild(assistantMessageElement);
+
     // Scroll to the bottom of the messages container
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
@@ -388,25 +406,8 @@ chatForm.addEventListener("submit", async (e) => {
 
     console.log(assistantMessage);
 
-    // Create a new div element for the message
-    const assistantMessageElement = document.createElement("div");
-    assistantMessageElement.classList.add("user-message"); // Add a class for styling
-
-    // Create username element
-    const assistantNameElement = document.createElement("div");
-    assistantNameElement.classList.add("message-username");
-    assistantNameElement.textContent = "Assistant"; // Set the username as "Assistant"
-
-    // Create message content element
-    const assistantMessageContentElement = document.createElement("div");
-    assistantMessageContentElement.classList.add("message-content");
     assistantMessageContentElement.innerHTML = `
     <div class="message__text"><pre>${assistantMessage}</pre></div>`;
-
-    // Append profile picture, username, and message content to message details
-    assistantMessageElement.appendChild(assistantNameElement);
-    assistantMessageElement.appendChild(assistantMessageContentElement);
-    messagesContainer.appendChild(assistantMessageElement);
 
     // Scroll to the bottom of the messages container
     messagesContainer.scrollTop = messagesContainer.scrollHeight;

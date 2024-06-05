@@ -107,7 +107,7 @@ body {
   font-size: 16px;
   text-align: justify;
   line-height: 30px;
-  background-color: slategrey;
+  background-color: #08539e;
   border-radius: 10px;
   padding: 25px;
 }
@@ -141,6 +141,16 @@ body {
   justify-content: space-between;
   align-items: center;
   position: relative;
+}
+
+#account {
+  margin-right: 4px;
+}
+
+#more {
+  width: 18px;
+  margin-right: 8px;
+  margin-top: 2px;
 }
 
 .username {
@@ -238,12 +248,14 @@ body {
 }
 
 .default-message {
-  font-size: 20px;
+  font-size: 40px;
   font-weight: bold;
   color: #333;
   position: fixed;
   top: 30%;
-  left: 30%;
+  left: 38%;
+  width: 43%;
+  text-align: center;
 }
 
 .user-message:nth-child(even) {
@@ -267,6 +279,7 @@ body {
 
 .input-section {
   position: relative;
+  width: 75%;
 }
 
 #input-container {
@@ -302,11 +315,11 @@ body {
 }
 
 .input-section p {
-  margin-top: 10px;
+  margin-top: 12px;
   margin-left: 80px;
   color: gray;
   text-align: center;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 /* Modal */
